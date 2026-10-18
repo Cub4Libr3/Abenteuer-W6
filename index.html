@@ -13,7 +13,7 @@ import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase
 import {getAuth,signInAnonymously,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import {getDatabase,ref,get,set,update,onValue,runTransaction,serverTimestamp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
 const $=id=>document.getElementById(id), esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const CK='w6-firebase-config',GMKEY='w6-gmnotes-';let app,auth,db,uid,roomKey,host=false,room=null,stop,editing=false,config=null;
+const statDrafts=new Map();const CK='w6-firebase-config',GMKEY='w6-gmnotes-';let app,auth,db,uid,roomKey,host=false,room=null,stop,editing=false,config=null;
 const roles=['Krieger','Waldläufer','Dieb','Assassine'];
 const attrs=['staerke','geschicklichkeit','intelligenz','willenskraft','charisma'];
 const attrNames={staerke:'Stärke',geschicklichkeit:'Geschicklichkeit',intelligenz:'Intelligenz',willenskraft:'Willenskraft',charisma:'Charisma'};
@@ -23,16 +23,16 @@ const tiers={1:[1,-3],2:[1,-2],3:[1,-1],4:[1,0],5:[2,-2],6:[2,-1],7:[2,0],8:[3,-
 const thresholds=[0,25,75,140,220,320,440,575,720,865,1000];
 const races={
  'Mensch':{mods:{},gold:0,at:0,pa:0,ep:0,desc:'Vielseitig, keine Boni oder Mali'},
- 'Elb':{mods:{geschicklichkeit:1,staerke:-1},gold:-5,at:0,pa:1,ep:0,desc:'+1 Geschick, −1 Stärke, +1 Parade, −5 Gold'},
- 'Zwerg':{mods:{staerke:1,charisma:-1},gold:5,at:1,pa:0,ep:0,desc:'+1 Stärke, −1 Charisma, +1 Attacke, +5 Gold'},
+ 'Elb':{mods:{geschicklichkeit:1,staerke:-1},gold:-5,at:0,pa:1,ep:0,desc:'+1 Geschick, −1 Stärke, −5 Gold'},
+ 'Zwerg':{mods:{staerke:1,charisma:-1},gold:5,at:1,pa:0,ep:0,desc:'+1 Stärke, −1 Charisma, +5 Gold'},
  'Halbling':{mods:{geschicklichkeit:1,willenskraft:-1},gold:10,at:0,pa:0,ep:0,desc:'+1 Geschick, −1 Willenskraft, +10 Gold'},
- 'Ork':{mods:{staerke:1,intelligenz:-1},gold:-10,at:1,pa:0,ep:2,desc:'+1 Stärke, −1 Intelligenz, +1 Attacke, −10 Gold, +2 EP/Abenteuer'}
+ 'Ork':{mods:{staerke:1,intelligenz:-1},gold:-10,at:1,pa:0,ep:2,desc:'+1 Stärke, −1 Intelligenz, −10 Gold, +2 EP/Abenteuer'}
 };
 const classes={
- 'Krieger':{mods:{staerke:1,charisma:-1},gold:0,at:1,pa:0,ep:0,desc:'+1 Stärke, −1 Charisma, +1 Attacke'},
- 'Waldläufer':{mods:{geschicklichkeit:1,willenskraft:-1},gold:0,at:0,pa:1,ep:0,desc:'+1 Geschick, −1 Willenskraft, +1 Parade'},
+ 'Krieger':{mods:{staerke:1,charisma:-1},gold:0,at:1,pa:0,ep:0,desc:'+1 Stärke, −1 Charisma'},
+ 'Waldläufer':{mods:{geschicklichkeit:1,willenskraft:-1},gold:0,at:0,pa:1,ep:0,desc:'+1 Geschick, −1 Willenskraft'},
  'Dieb':{mods:{geschicklichkeit:1,staerke:-1},gold:10,at:0,pa:0,ep:0,desc:'+1 Geschick, −1 Stärke, +10 Gold'},
- 'Assassine':{mods:{geschicklichkeit:1,charisma:-1},gold:-10,at:1,pa:0,ep:2,desc:'+1 Geschick, −1 Charisma, +1 Attacke, −10 Gold, +2 EP/Abenteuer'}
+ 'Assassine':{mods:{geschicklichkeit:1,charisma:-1},gold:-10,at:1,pa:0,ep:2,desc:'+1 Geschick, −1 Charisma, −10 Gold, +2 EP/Abenteuer'}
 };
 const presets=[{stats:[7,4,2,3,2]},{stats:[3,7,3,3,2]},{stats:[4,5,3,3,3]},{stats:[3,6,3,3,3]}];
 const hero=i=>{const p=presets[i]||presets[0];return {name:'Noch ohne Namen',role:roles[i]||'Krieger',race:'Mensch',stats:Object.fromEntries(attrs.map((a,j)=>[a,p.stats[j]])),weaponId:-1,armorId:-1,xpLevel:0,xp:0,gold:100,ownedWeapons:{},ownedArmors:{},potions:{},activeBoosts:{},hp:18,maxHp:18,inventory:'',notes:'',owner:'',rulesVersion:4};};
@@ -40,7 +40,7 @@ function levelForXp(xp){let level=0;for(let j=1;j<thresholds.length;j++)if(xp>=t
 function normalized(h){const p=hero(0);const x=Math.max(0,Math.min(1000,Number(h.xp)||0));return {...p,...h,stats:{...p.stats,...(h.stats||{})},race:races[h.race]?h.race:'Mensch',role:classes[h.role]?h.role:'Krieger',xp:x,xpLevel:levelForXp(x),gold:Number(h.gold??100),ownedWeapons:h.ownedWeapons||{},ownedArmors:h.ownedArmors||{},potions:h.potions||{},activeBoosts:h.activeBoosts||{},maxHp:18,hp:Math.min(18,Number(h.hp??18))};}
 function modsFor(h){const a=races[h.race]||races.Mensch,b=classes[h.role]||classes.Krieger;return {a,b};}
 function effectiveStats(h){const {a,b}=modsFor(h);return Object.fromEntries(attrs.map(k=>[k,Math.max(1,Math.min(10,Number(h.stats[k]||1)+(a.mods[k]||0)+(b.mods[k]||0)+(Number(h.activeBoosts?.[k])||0)))]));}
-function combatFor(h,kind){const {a,b}=modsFor(h);return Math.max(1,Math.min(10,combatLevel(effectiveStats(h),kind)+(kind==='attack'?a.at+b.at:a.pa+b.pa)));}
+function combatFor(h,kind){return combatLevel(effectiveStats(h),kind);}
 function startGold(h){const {a,b}=modsFor(h);return 100+a.gold+b.gold;}
 function epBonus(h){const {a,b}=modsFor(h);return a.ep+b.ep;}
 function levelText(l){const [n,b]=tiers[l];return `${n}W6${b<0?'−'+Math.abs(b):b>0?'+'+b:''}`;}
@@ -99,12 +99,13 @@ function render(){
  if(!room)return;
  const entries=Object.entries(room.heroes||{}).sort(([a],[b])=>Number(a)-Number(b));
  const mineEntries=entries.filter(([i,h])=>host||h.owner===uid);
- $('roomTitle').textContent='Spielrunde · '+entries.length+' Charaktere';
+ $('roomTitle').textContent='Spielrunde · '+entries.length+' Charaktere · Korrektur 5';
  const chosen=$('rollHero').value;
  $('rollHero').innerHTML=mineEntries.map(([i,h])=>`<option value="${i}">${esc(h.name)}</option>`).join('');
  if([...$('rollHero').options].some(o=>o.value===chosen))$('rollHero').value=chosen;
  $('heroVisibility').textContent=host?'Meisteransicht: alle Charaktere':mineEntries.length?'Dein persönlicher Charakterbogen':'Wähle unten einen freien Charakterplatz. Andere Charakterbögen bleiben verborgen.';
  const visible=host?entries:mineEntries;
+ $('heroes').querySelectorAll('[data-sheet]').forEach(sheet=>{const i=String(sheet.dataset.sheet);const vals={};sheet.querySelectorAll('[data-stat]').forEach(el=>vals[el.dataset.stat]=Number(el.value));if(Object.keys(vals).length===5&&statDrafts.has(i))statDrafts.set(i,vals);});
  $('heroes').innerHTML=visible.map(([i,raw])=>{
  const h=normalized(raw),stats=effectiveStats(h),at=combatFor(h,'attack'),pa=combatFor(h,'parry'),w=weaponOf(h),a=armorOf(h),budget=maxPoints(h),spent=attrs.reduce((sum,k)=>sum+Number(h.stats[k]),0);
  const canEdit=host||raw.owner===uid, {a:raceMod,b:classMod}=modsFor(h);
@@ -119,7 +120,7 @@ function render(){
  <div class="sheet-stats"><div class="sheet-tile">❤️ Lebenspunkte<b>${h.hp} / 18</b></div><div class="sheet-tile">⚔️ Attacke · Stufe ${at}<b>${levelText(at)}</b></div><div class="sheet-tile">🛡️ Parade · Stufe ${pa}<b>${levelText(pa)}</b></div><div class="sheet-tile">🎯 Talentpunkte<b>${spent} / ${budget}</b></div></div>
  ${canEdit?`<h4>Volk und Klasse</h4><div class="grid"><div><label>Volk</label><select data-identity="race" data-index="${i}">${options(races,h.race)}</select><small>${esc(raceMod.desc)}</small></div><div><label>Klasse</label><select data-identity="role" data-index="${i}">${options(classes,h.role)}</select><small>${esc(classMod.desc)}</small></div></div><p class="muted">Startgeld mit dieser Kombination: ${startGold(h)} Gold · EP-Bonus je Abenteuer: +${epBonus(h)} · Änderungen nach dem ersten Kauf/EP sind gesperrt.</p>`:''}
  <h4>Talente · 10 Stufen</h4>
- ${attrs.map(k=>`<div class="level-row"><div class="row"><span class="grow">${attrNames[k]}</span><b data-level-label="${k}">Basis ${h.stats[k]} → ${stats[k]} · ${levelText(stats[k])}</b></div>${canEdit?`<input type="range" min="1" max="10" step="1" value="${h.stats[k]}" data-stat="${k}" data-index="${i}" aria-label="${attrNames[k]} Stufe">`:`<div class="muted">${'●'.repeat(stats[k])}${'○'.repeat(10-stats[k])}</div>`}</div>`).join('')}
+ ${attrs.map(k=>`<div class="level-row"><div class="row"><span class="grow">${attrNames[k]}</span><b data-level-label="${k}">Basis ${h.stats[k]} → ${stats[k]} · ${levelText(stats[k])}</b></div>${canEdit?`<input type="range" min="1" max="10" step="1" value="${statDrafts.get(String(i))?.[k]??h.stats[k]}" data-stat="${k}" data-index="${i}" aria-label="${attrNames[k]} Stufe">`:`<div class="muted">${'●'.repeat(stats[k])}${'○'.repeat(10-stats[k])}</div>`}</div>`).join('')}
  ${canEdit?`<div class="notice" id="points-${i}"></div><div class="sheet-stats"><div class="sheet-tile">⚔️ AT-Vorschau<b id="at-preview-${i}"></b></div><div class="sheet-tile">🛡️ PA-Vorschau<b id="pa-preview-${i}"></b></div></div><button class="primary" data-save-stats="${i}">Talentpunkte speichern</button>`:''}
  <h4>🪙 Ausrüstung kaufen</h4><div class="sheet-stats"><div class="sheet-tile">Waffe<b>${esc(w[0])}</b>${equipmentText(w.slice(1))} Schaden</div><div class="sheet-tile">Rüstung<b>${esc(a[0])}</b>RS ${a[2]}</div></div>
  ${canEdit?`<label>Waffe kaufen</label><div class="row"><select class="grow" data-shop="weapon" data-index="${i}">${weapons.map((x,j)=>`<option value="${j}" ${x[1]>h.xpLevel||h.ownedWeapons[j]?'disabled':''}>${esc(x[0])} · ${weaponPrices[j]} Gold · L${x[1]}${h.ownedWeapons[j]?' (gekauft)':''}</option>`).join('')}</select><button data-buy="weapon" data-index="${i}">Kaufen</button></div><label>Rüstung kaufen</label><div class="row"><select class="grow" data-shop="armor" data-index="${i}">${armors.map((x,j)=>`<option value="${j}" ${x[1]>h.xpLevel||h.ownedArmors[j]?'disabled':''}>${esc(x[0])} · RS ${x[2]} · ${armorPrices[j]} Gold · L${x[1]}${h.ownedArmors[j]?' (gekauft)':''}</option>`).join('')}</select><button data-buy="armor" data-index="${i}">Kaufen</button></div><label>Waffe anlegen</label><select data-equip="weaponId" data-index="${i}"><option value="-1">Unbewaffnet</option>${ownedWeapons.map(j=>`<option value="${j}" ${Number(h.weaponId)===Number(j)?'selected':''}>${esc(weapons[j][0])}</option>`).join('')}</select><label>Rüstung anlegen</label><select data-equip="armorId" data-index="${i}"><option value="-1">Keine Rüstung</option>${ownedArmors.map(j=>`<option value="${j}" ${Number(h.armorId)===Number(j)?'selected':''}>${esc(armors[j][0])}</option>`).join('')}</select>
@@ -135,7 +136,7 @@ function render(){
  $('heroes').querySelectorAll('[data-claim]').forEach(b=>b.onclick=()=>claim(b.dataset.claim));
  $('heroes').querySelectorAll('[data-hp]').forEach(b=>b.onclick=()=>changeHp(b.dataset.hp,Number(b.dataset.delta)));
  $('heroes').querySelectorAll('[data-field]').forEach(el=>el.onchange=()=>writeField(el.dataset.index,el.dataset.field,el.value));
- $('heroes').querySelectorAll('[data-stat]').forEach(el=>el.oninput=()=>previewStats(el.dataset.index));
+ $('heroes').querySelectorAll('[data-stat]').forEach(el=>el.oninput=()=>{const i=String(el.dataset.index);statDrafts.set(i,draftStats(i));previewStats(i);});
  $('heroes').querySelectorAll('[data-save-stats]').forEach(b=>b.onclick=()=>saveStats(b.dataset.saveStats));
  $('heroes').querySelectorAll('[data-identity]').forEach(el=>el.onchange=()=>saveIdentity(el.dataset.index,el.dataset.identity,el.value));
  $('heroes').querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const sel=$('heroes').querySelector(`[data-shop="${b.dataset.buy}"][data-index="${b.dataset.index}"]`);buy(b.dataset.index,b.dataset.buy,Number(sel.value));});
@@ -179,13 +180,28 @@ function previewStats(i){
  const h=normalized(raw),budget=maxPoints(h),sum=Object.values(stats).reduce((a,b)=>a+b,0),temp={...h,stats},eff=effectiveStats(temp);
  for(const k of attrs){const el=$('heroes').querySelector(`[data-sheet="${i}"] [data-level-label="${k}"]`);if(el)el.textContent=`Basis ${stats[k]} → ${eff[k]} · ${levelText(eff[k])}`;}
  const at=combatFor(temp,'attack'),pa=combatFor(temp,'parry');$('at-preview-'+i).textContent=`Stufe ${at} · ${levelText(at)}`;$('pa-preview-'+i).textContent=`Stufe ${pa} · ${levelText(pa)}`;
- const left=budget-sum;$('points-'+i).textContent=left===0?`✓ Alle ${budget} Punkte verteilt`:left>0?`${left} Punkte verbleiben von ${budget}`:`${-left} Punkte zu viel – bitte reduzieren`;
- const b=$('heroes').querySelector(`[data-save-stats="${i}"]`);if(b)b.disabled=left!==0;
+ const left=budget-sum;$('points-'+i).textContent=left===0?`✓ Alle ${budget} Punkte verteilt`:left>0?`${left} Punkte noch frei – Speichern ist möglich`:`${-left} Punkte zu viel – bitte reduzieren`;
+ const b=$('heroes').querySelector(`[data-save-stats="${i}"]`);if(b)b.disabled=left<0;
 }
-async function saveStats(i){try{const raw=room.heroes?.[i];if(!raw||(!host&&raw.owner!==uid))throw Error('Keine Berechtigung.');const stats=draftStats(i);if(!stats||Object.values(stats).some(x=>!Number.isInteger(x)||x<1||x>10))throw Error('Stufen müssen 1 bis 10 sein.');const sum=Object.values(stats).reduce((a,b)=>a+b,0);if(sum>maxPoints(normalized(raw)))throw Error('Zu viele Punkte vergeben.');await set(ref(db,`rooms/${roomKey}/heroes/${i}/stats`),stats);}catch(e){alert(e.message||e);}}
+async function saveStats(i){try{const raw=room.heroes?.[i];if(!raw||(!host&&raw.owner!==uid))throw Error('Keine Berechtigung.');const stats=draftStats(i);if(!stats||Object.values(stats).some(x=>!Number.isInteger(x)||x<1||x>10))throw Error('Stufen müssen 1 bis 10 sein.');const sum=Object.values(stats).reduce((a,b)=>a+b,0);if(sum>maxPoints(normalized(raw)))throw Error('Zu viele Punkte vergeben.');await set(ref(db,`rooms/${roomKey}/heroes/${i}/stats`),stats);statDrafts.delete(String(i));alert('Talentpunkte erfolgreich gespeichert.');}catch(e){alert(e.message||e);}}
 function canManage(raw){return raw&&(host||raw.owner===uid);}
 async function saveIdentity(i,field,value){try{const raw=room.heroes?.[i];if(!canManage(raw))throw Error('Keine Berechtigung.');const h=normalized(raw);if(h.xp>0||h.gold!==startGold(h)||Object.keys(h.ownedWeapons).length||Object.keys(h.ownedArmors).length||Object.keys(h.potions).length)throw Error('Volk und Klasse können nur vor dem ersten Kauf oder Abenteuer gewechselt werden.');if(field==='race'&&!races[value]||field==='role'&&!classes[value])throw Error('Ungültige Wahl.');const newer={...h,[field]:value};await update(ref(db,`rooms/${roomKey}/heroes/${i}`),{[field]:value,gold:startGold(newer)});}catch(e){alert(e.message||e);render();}}
-async function buy(i,kind,id){try{const raw=room.heroes?.[i];if(!canManage(raw))throw Error('Keine Berechtigung.');const list=kind==='weapon'?weapons:kind==='armor'?armors:potions,prices=kind==='weapon'?weaponPrices:kind==='armor'?armorPrices:potions.map(x=>x.price);if(!Number.isInteger(id)||!list[id])throw Error('Ungültiger Gegenstand.');const price=prices[id];const result=await runTransaction(ref(db,`rooms/${roomKey}/heroes/${i}`),data=>{if(!data)return;const h=normalized(data);if(!host&&data.owner!==uid)return;if(h.gold<price)return;if(kind!=='potion'&&list[id][1]>h.xpLevel)return;const field=kind==='weapon'?'ownedWeapons':kind==='armor'?'ownedArmors':'potions';const owned={...(data[field]||{})};if(kind!=='potion'&&owned[id])return;owned[id]=kind==='potion'?(Number(owned[id])||0)+1:true;return {...data,gold:h.gold-price,[field]:owned};},{applyLocally:false});if(!result.committed)throw Error('Kauf nicht möglich: Gold, Level oder Besitz prüfen.');}catch(e){alert(e.message||e);}}
+async function buy(i,kind,id){try{
+ const raw=room.heroes?.[i];if(!canManage(raw))throw Error('Keine Berechtigung.');
+ const list=kind==='weapon'?weapons:kind==='armor'?armors:potions;
+ const prices=kind==='weapon'?weaponPrices:kind==='armor'?armorPrices:potions.map(x=>x.price);
+ if(!Number.isInteger(id)||!list[id])throw Error('Ungültiger Gegenstand.');
+ const h=normalized(raw),price=prices[id];
+ if(h.gold<price)throw Error('Nicht genügend Gold.');
+ if(kind!=='potion'&&list[id][1]>h.xpLevel)throw Error('Dein Level reicht für diesen Gegenstand noch nicht.');
+ const field=kind==='weapon'?'ownedWeapons':kind==='armor'?'ownedArmors':'potions';
+ if(kind!=='potion'&&h[field]?.[id])throw Error('Diesen Gegenstand besitzt du bereits.');
+ const newCount=(Number(h.potions?.[id])||0)+1;
+ if(kind==='potion'&&newCount>99)throw Error('Du kannst maximal 99 Tränke dieser Sorte besitzen.');
+ // Only change the purchase fields, not the entire character. Both updates are atomic.
+ const changes={gold:h.gold-price};changes[`${field}/${id}`]=kind==='potion'?newCount:true;
+ await update(ref(db,`rooms/${roomKey}/heroes/${i}`),changes);
+ }catch(e){alert('Kauf fehlgeschlagen: '+(e.message||e)+'\n\nPrüfe, ob die Datenbankregeln aus dem aktuellen ZIP veröffentlicht sind.');}}
 async function drink(i,id){try{const raw=room.heroes?.[i];if(!canManage(raw))throw Error('Keine Berechtigung.');const p=potions[id];if(!p)return;const result=await runTransaction(ref(db,`rooms/${roomKey}/heroes/${i}`),data=>{if(!data)return;const h=normalized(data);if(!host&&data.owner!==uid)return;const count=Number(h.potions[id])||0;if(count<1)return;if(p.talent&&h.activeBoosts[p.talent])return;const pots={...h.potions,[id]:count-1},boosts={...h.activeBoosts};if(p.talent)boosts[p.talent]=1;return {...data,potions:pots,activeBoosts:boosts,hp:p.heal?Math.min(18,h.hp+p.heal):h.hp};},{applyLocally:false});if(!result.committed)throw Error('Trank nicht verfügbar oder Talentwirkung bereits aktiv.');if(p.talent)alert('Talentwirkung aktiv. Der Meister entscheidet über die Dauer und beendet sie anschließend.');}catch(e){alert(e.message||e);}}
 async function endBoost(i,talent){try{const raw=room.heroes?.[i];if(!canManage(raw))throw Error('Keine Berechtigung.');await set(ref(db,`rooms/${roomKey}/heroes/${i}/activeBoosts/${talent}`),null);}catch(e){alert(e.message||e);}}
 async function awardXp(i){try{if(!host)throw Error('Nur der Meister vergibt EP.');const input=$('heroes').querySelector(`[data-award-ep="${i}"]`);const base=Number(input?.value);if(!Number.isInteger(base)||base<1||base>200)throw Error('Bitte 1–200 Grund-EP eingeben.');const h=normalized(room.heroes?.[i]);const gain=base+epBonus(h);if(!confirm(`${h.name} erhält ${gain} EP (${base} + ${epBonus(h)} Bonus). Abenteuer abschließen?`))return;await runTransaction(ref(db,`rooms/${roomKey}/heroes/${i}/xp`),v=>Math.min(1000,(Number(v)||0)+gain));}catch(e){alert(e.message||e);}}
