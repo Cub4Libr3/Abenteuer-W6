@@ -32,7 +32,22 @@ const randomKey=()=>{const b=new Uint8Array(18);crypto.getRandomValues(b);return
 $('create').onclick=async()=>{try{await connect();let key=randomKey();let data={hostUid:uid,createdAt:Date.now(),heroes:{0:hero(0),1:hero(1)},enemies:{0:{name:'Kobold 1',hp:8},1:{name:'Kobold 2',hp:8}},history:{}};await set(ref(db,'rooms/'+key),data);await enter(key)}catch(e){err(e)}};
 $('join').onclick=async()=>{try{await connect();let v=$('joinKey').value.trim();let key=v;try{key=new URL(v).searchParams.get('room')||v}catch{}if(!/^[a-f0-9]{36}$/.test(key))throw Error('Ungültiger Sitzungsschlüssel.');await enter(key)}catch(e){err(e)}};
 async function enter(key){const snap=await get(ref(db,'rooms/'+key));if(!snap.exists())throw Error('Sitzung nicht gefunden oder Zugriff verweigert.');roomKey=key;host=snap.val().hostUid===uid;$('setup').hidden=true;$('room').hidden=false;$('roleLabel').textContent=host?'👑 Meister':'🧙 Spieler';$('hostControls').hidden=!host;$('hostInvite').hidden=!host;const url=new URL(location.href);url.searchParams.set('room',key);url.searchParams.set('cfg',btoa(JSON.stringify(config)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''));$('invite').value=url.href;history.replaceState(null,'',url);if(host){$('gmNotes').value=localStorage.getItem(GMKEY+key)||'';drawQR(url.href)}stop=onValue(ref(db,'rooms/'+key),s=>{if(!s.exists()){alert('Sitzung wurde gelöscht.');location.href=location.pathname;return}room=s.val();render()},e=>err(e))}
-function drawQR(url){const target=$('qr');target.textContent='QR-Code wird geladen …';let script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js';script.onload=()=>{target.textContent='';window.QRCode.toCanvas(url,{width:260,margin:2,errorCorrectionLevel:'L'},(error,canvas)=>{if(error)target.textContent='QR-Code nicht verfügbar – Link verwenden.';else target.appendChild(canvas)})};script.onerror=()=>target.textContent='QR-Code nicht verfügbar – Link verwenden.';document.head.appendChild(script)}
+function drawQR(url){
+  const target=$('qr');
+  target.textContent='QR-Code wird geladen …';
+  function render(){
+    target.textContent='';
+    try {
+      new window.QRCode(target, {text:url,width:260,height:260,correctLevel:window.QRCode.CorrectLevel.L});
+    } catch(e) {target.textContent='QR-Code nicht verfügbar – Link verwenden.';console.error('QR-Code:',e);}
+  }
+  if(window.QRCode){render();return;}
+  const script=document.createElement('script');
+  script.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+  script.onload=()=>window.QRCode?render():target.textContent='QR-Code nicht verfügbar – Link verwenden.';
+  script.onerror=()=>target.textContent='QR-Code nicht verfügbar – Link verwenden.';
+  document.head.appendChild(script);
+}
 $('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('invite').value);$('copy').textContent='Kopiert!'}catch{prompt('Link kopieren:', $('invite').value)}};
 $('leave').onclick=()=>{if(stop)stop();history.replaceState(null,'',location.pathname);location.reload()};
 function render(){if(!room)return;let entries=Object.entries(room.heroes||{}).sort(([a],[b])=>Number(a)-Number(b));$('roomTitle').textContent='Spielrunde · '+entries.length+' Charaktere';const chosen=$('rollHero').value;$('rollHero').innerHTML=entries.filter(([i,h])=>host||h.owner===uid).map(([i,h])=>`<option value="${i}">${esc(h.name)}</option>`).join('');if([...$('rollHero').options].some(o=>o.value===chosen))$('rollHero').value=chosen;
