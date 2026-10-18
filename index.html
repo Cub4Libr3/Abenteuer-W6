@@ -101,7 +101,7 @@ function render(){
  if(!room)return;
  const entries=Object.entries(room.heroes||{}).sort(([a],[b])=>Number(a)-Number(b));
  const mineEntries=entries.filter(([i,h])=>host||h.owner===uid);
- $('roomTitle').textContent='Spielrunde · '+entries.length+' Charaktere · Korrektur 5';
+ $('roomTitle').textContent='Spielrunde · '+entries.length+' Charaktere · Korrektur 6';
  const chosen=$('rollHero').value;
  $('rollHero').innerHTML=mineEntries.map(([i,h])=>`<option value="${i}">${esc(h.name)}</option>`).join('');
  if([...$('rollHero').options].some(o=>o.value===chosen))$('rollHero').value=chosen;
@@ -120,7 +120,7 @@ function render(){
  <div class="xp-track">${thresholds.map((t,j)=>`<span class="xp-step ${j<=h.xpLevel?'done':''}" title="Level ${j}: ${t} EP">${j}</span>`).join('')}</div>
  <p class="muted">✨ ${h.xp} / 1000 EP · ${h.xpLevel===10?'Maximallevel erreicht':`Nächster Level bei ${next} EP (noch ${next-h.xp} EP)`} · 🪙 ${h.gold} Gold</p>
  <div class="sheet-stats"><div class="sheet-tile">❤️ Lebenspunkte<b>${h.hp} / 18</b></div><div class="sheet-tile">⚔️ Attacke · Stufe ${at}<b>${levelText(at)}</b></div><div class="sheet-tile">🛡️ Parade · Stufe ${pa}<b>${levelText(pa)}</b></div><div class="sheet-tile">🎯 Talentpunkte<b>${spent} / ${budget}</b></div></div>
- ${canEdit?`<h4>Volk und Klasse</h4><div class="grid"><div><label>Volk</label><select data-identity="race" data-index="${i}">${options(races,h.race)}</select><small>${esc(raceMod.desc)}</small></div><div><label>Klasse</label><select data-identity="role" data-index="${i}">${options(classes,h.role)}</select><small>${esc(classMod.desc)}</small></div></div><p class="muted">Startgeld mit dieser Kombination: ${startGold(h)} Gold · EP-Bonus je Abenteuer: +${epBonus(h)} · Änderungen nach dem ersten Kauf/EP sind gesperrt.</p>`:''}
+ ${canEdit?`<h4>Volk und Klasse</h4><div class="grid"><div><label>Volk</label><select data-identity="race" data-index="${i}">${options(races,h.race)}</select><small>${esc(raceMod.desc)}</small></div><div><label>Klasse</label><select data-identity="role" data-index="${i}">${options(classes,h.role)}</select><small>${esc(classMod.desc)}</small></div></div><p class="muted">Startgeld mit dieser Kombination: ${startGold(h)} Gold · EP-Bonus je Abenteuer: +${epBonus(h)} · Bei jedem Wechsel werden die 18 Startpunkte neu verteilt (4/4/4/3/3); Boni und Mali werden danach neu berechnet. Änderungen nach dem ersten Kauf/EP sind gesperrt.</p>`:''}
  <h4>Talente · 10 Stufen</h4>
  ${attrs.map(k=>`<div class="level-row"><div class="row"><span class="grow">${attrNames[k]}</span><b data-level-label="${k}">Basis ${h.stats[k]} → ${stats[k]} · ${levelText(stats[k])}</b></div><div class="shop-details" data-mod-label="${k}">${talentModMarkup(h,k)}</div>${canEdit?`<input type="range" min="1" max="10" step="1" value="${statDrafts.get(String(i))?.[k]??h.stats[k]}" data-stat="${k}" data-index="${i}" aria-label="${attrNames[k]} Stufe">`:`<div class="muted">${'●'.repeat(stats[k])}${'○'.repeat(10-stats[k])}</div>`}</div>`).join('')}
  ${canEdit?`<div class="notice" id="points-${i}"></div><div class="sheet-stats"><div class="sheet-tile">⚔️ AT-Vorschau<b id="at-preview-${i}"></b></div><div class="sheet-tile">🛡️ PA-Vorschau<b id="pa-preview-${i}"></b></div></div><button class="primary" data-save-stats="${i}">Talentpunkte speichern</button>`:''}
@@ -188,28 +188,30 @@ function previewStats(i){
 }
 async function saveStats(i){try{const raw=room.heroes?.[i];if(!raw||(!host&&raw.owner!==uid))throw Error('Keine Berechtigung.');const stats=draftStats(i);if(!stats||Object.values(stats).some(x=>!Number.isInteger(x)||x<1||x>10))throw Error('Stufen müssen 1 bis 10 sein.');const sum=Object.values(stats).reduce((a,b)=>a+b,0);if(sum>maxPoints(normalized(raw)))throw Error('Zu viele Punkte vergeben.');await set(ref(db,`rooms/${roomKey}/heroes/${i}/stats`),stats);statDrafts.delete(String(i));alert('Talentpunkte erfolgreich gespeichert.');}catch(e){alert(e.message||e);}}
 function canManage(raw){return raw&&(host||raw.owner===uid);}
-async function saveIdentity(i,field,value){try{const raw=room.heroes?.[i];if(!canManage(raw))throw Error('Keine Berechtigung.');const h=normalized(raw);if(h.xp>0||h.gold!==startGold(h)||Object.keys(h.ownedWeapons).length||Object.keys(h.ownedArmors).length||Object.keys(h.potions).length)throw Error('Volk und Klasse können nur vor dem ersten Kauf oder Abenteuer gewechselt werden.');if(field==='race'&&!races[value]||field==='role'&&!classes[value])throw Error('Ungültige Wahl.');const newer={...h,[field]:value};await update(ref(db,`rooms/${roomKey}/heroes/${i}`),{[field]:value,gold:startGold(newer)});}catch(e){alert(e.message||e);render();}}
+async function saveIdentity(i,field,value){try{const raw=room.heroes?.[i];if(!canManage(raw))throw Error('Keine Berechtigung.');const h=normalized(raw);if(h.xp>0||h.gold!==startGold(h)||Object.keys(h.ownedWeapons).length||Object.keys(h.ownedArmors).length||Object.keys(h.potions).length)throw Error('Volk und Klasse können nur vor dem ersten Kauf oder Abenteuer gewechselt werden.');if(field==='race'&&!races[value]||field==='role'&&!classes[value])throw Error('Ungültige Wahl.');// Bei jedem Wechsel von Volk oder Klasse werden die 18 Startpunkte neu verteilt.
+ const baseline={staerke:4,geschicklichkeit:4,intelligenz:4,willenskraft:3,charisma:3};
+ const newer={...h,[field]:value,stats:baseline};
+ statDrafts.delete(String(i));
+ await update(ref(db,`rooms/${roomKey}/heroes/${i}`),{[field]:value,stats:baseline,gold:startGold(newer)});}catch(e){alert(e.message||e);render();}}
 async function buy(i,kind,id){try{
  const raw=room.heroes?.[i];if(!canManage(raw))throw Error('Keine Berechtigung für diesen Charakter.');
  const list=kind==='weapon'?weapons:kind==='armor'?armors:potions;
  const prices=kind==='weapon'?weaponPrices:kind==='armor'?armorPrices:potions.map(x=>x.price);
  if(!Number.isInteger(id)||!list[id])throw Error('Ungültiger Gegenstand.');
- const field=kind==='weapon'?'ownedWeapons':kind==='armor'?'ownedArmors':'potions',price=prices[id];
- let reason='';
- const result=await runTransaction(ref(db,`rooms/${roomKey}/heroes/${i}`),current=>{
-  if(!current)return;
-  if(!host&&current.owner!==uid){reason='Dieser Charakter gehört nicht deinem Konto.';return;}
-  const h=normalized(current);
-  if(h.gold<price){reason='Nicht genügend Gold.';return;}
-  if(kind!=='potion'&&list[id][1]>h.xpLevel){reason='Mindestlevel noch nicht erreicht.';return;}
-  if(kind!=='potion'&&h[field]?.[id]){reason='Bereits gekauft.';return;}
-  if(kind==='potion'&&(Number(h.potions?.[id])||0)>=99){reason='Maximal 99 Tränke.';return;}
-  const owned={...(current[field]||{})};owned[id]=kind==='potion'?(Number(owned[id])||0)+1:true;
-  return {...current,gold:h.gold-price,[field]:owned};
- },{applyLocally:false});
- if(!result.committed)throw Error(reason||'Kauf wurde nicht ausgeführt.');
+ const h=normalized(raw),price=prices[id],field=kind==='weapon'?'ownedWeapons':kind==='armor'?'ownedArmors':'potions';
+ if(h.gold<price)throw Error('Nicht genügend Gold.');
+ if(kind!=='potion'&&list[id][1]>h.xpLevel)throw Error('Mindestlevel noch nicht erreicht.');
+ if(kind!=='potion'&&h[field]?.[id])throw Error('Bereits gekauft.');
+ if(kind==='potion'&&(Number(h.potions?.[id])||0)>=99)throw Error('Maximal 99 Tränke.');
+ // Atomare Mehrpfad-Aktualisierung: Nur Gold und der gekaufte Artikel.
+ // Anders als eine Transaktion auf dem ganzen Helden benötigt sie keine
+ // Schreibberechtigung für XP, Identität oder andere Charakterfelder.
+ const changes={gold:h.gold-price};
+ // Waffen und Rüstungen werden wie Tränke als numerische Besitzmenge gespeichert.
+ changes[`${field}/${id}`]=kind==='potion'?(Number(h.potions?.[id])||0)+1:1;
+ await update(ref(db,`rooms/${roomKey}/heroes/${i}`),changes);
  alert(`${list[id].name||list[id][0]} gekauft! ${price} Gold abgezogen.`);
- }catch(e){alert('Kauf fehlgeschlagen: '+(e.message||e)+'\n\nWenn PERMISSION_DENIED erscheint, muss die Schreibregel für rooms/ROOM/heroes/SLOT geprüft werden.');}}
+ }catch(e){alert('Kauf fehlgeschlagen: '+(e.message||e)+'\n\nBitte kontrolliere, ob die neuen Datenbankregeln veröffentlicht sind.');}}
 async function drink(i,id){try{const raw=room.heroes?.[i];if(!canManage(raw))throw Error('Keine Berechtigung.');const p=potions[id];if(!p)return;const result=await runTransaction(ref(db,`rooms/${roomKey}/heroes/${i}`),data=>{if(!data)return;const h=normalized(data);if(!host&&data.owner!==uid)return;const count=Number(h.potions[id])||0;if(count<1)return;if(p.talent&&h.activeBoosts[p.talent])return;const pots={...h.potions,[id]:count-1},boosts={...h.activeBoosts};if(p.talent)boosts[p.talent]=1;return {...data,potions:pots,activeBoosts:boosts,hp:p.heal?Math.min(18,h.hp+p.heal):h.hp};},{applyLocally:false});if(!result.committed)throw Error('Trank nicht verfügbar oder Talentwirkung bereits aktiv.');if(p.talent)alert('Talentwirkung aktiv. Der Meister entscheidet über die Dauer und beendet sie anschließend.');}catch(e){alert(e.message||e);}}
 async function endBoost(i,talent){try{const raw=room.heroes?.[i];if(!canManage(raw))throw Error('Keine Berechtigung.');await set(ref(db,`rooms/${roomKey}/heroes/${i}/activeBoosts/${talent}`),null);}catch(e){alert(e.message||e);}}
 async function awardXp(i){try{if(!host)throw Error('Nur der Meister vergibt EP.');const input=$('heroes').querySelector(`[data-award-ep="${i}"]`);const base=Number(input?.value);if(!Number.isInteger(base)||base<1||base>200)throw Error('Bitte 1–200 Grund-EP eingeben.');const h=normalized(room.heroes?.[i]);const gain=base+epBonus(h);if(!confirm(`${h.name} erhält ${gain} EP (${base} + ${epBonus(h)} Bonus). Abenteuer abschließen?`))return;await runTransaction(ref(db,`rooms/${roomKey}/heroes/${i}/xp`),v=>Math.min(1000,(Number(v)||0)+gain));}catch(e){alert(e.message||e);}}
