@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Alearis RC 10.8 – Live-Bildercheck</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif; }
+    body { background: #111724; color: #e9e5dd; margin: 0; padding: 24px; }
+    main { max-width: 1100px; margin: auto; }
+    h1 { font-size: clamp(1.4rem, 3vw, 2.3rem); color:#efcc83; margin:.4em 0; }
+    h2 { font-size:1.15rem; margin:1.4rem 0 .65rem; }
+    p { line-height:1.55; color:#c5cfda; }
+    .panel { background:#1b2635;border:1px solid #41556e;border-radius:14px;padding:18px;margin-bottom:20px; }
+    .count { font-size:1.15rem; font-weight:700; color:#f0d69b; }
+    .button {padding:11px 17px; border:1px solid #e8c079;border-radius:9px;background:#ab7931;color:white;cursor:pointer;font:inherit;font-weight:bold;}
+    .button:disabled {opacity:.5;cursor:wait;}
+    table {border-collapse:collapse; width:100%; font-size: .92rem;}
+    th,td {text-align:left; border-bottom:1px solid #394b61; padding:10px 8px;vertical-align:middle;}
+    th {color:#efcc83;background:#1c2b3b;}
+    td.path {word-break:break-word;font-family:ui-monospace,Consolas,monospace;font-size:.8rem;}
+    td a {color:#adceff;}
+    .good {color:#7ae3ac;font-weight:700;}
+    .old {color:#ffce75;font-weight:700;}
+    .bad {color:#ff8c86;font-weight:700;}
+    .unknown {color:#d7c3fb;font-weight:700;}
+    .tiny {font-size:.8rem;color:#aebbc8;}
+    code {background:#101925;padding:3px 5px;border-radius:4px;}
+    .tablewrap {overflow-x:auto; border:1px solid #41556e;border-radius:12px;}
+    .hint {border-left:4px solid #d1ad6b;padding-left:12px;}
+    @media(max-width:600px){body{padding:12px}th,td{padding:8px 5px}table{font-size:.8rem}}
+  </style>
+</head>
+<body><main>
+  <h1>Alearis RC 10.8 – Live-Bildercheck</h1>
+  <p>Dieses Werkzeug prüft die <b>26 aktualisierten Kleidung- und Schmuckbilder</b> auf deiner veröffentlichten Website und vergleicht ihre Datei-Prüfsummen mit dem zuletzt bereitgestellten Austauschpaket. Es verändert keine Spieldaten und braucht kein Firebase.</p>
+  <div class="panel">
+    <p class="count" id="summary" aria-live="polite">Prüfung beginnt …</p>
+    <button class="button" id="retry" disabled>Erneut prüfen</button>
+    <p class="tiny">Prüfadresse: <span id="origin"></span></p>
+    <p class="hint">Öffne diese Prüfseite ausschließlich unter https://cub4libr3.github.io/Abenteuer-W6/Alearis-RC-10.8-Live-Bildercheck.html. Eine Vorschau in ChatGPT ist kein zuverlässiger Test der GitHub-Pages-Website. Bei 26× NEU und weiterhin alten Spielbildern: Strg+Umschalt+R drücken; anschließend die HTML-Cache-Kennung prüfen.</p>
+  </div>
+  <p><strong>Direktlinks ohne Diagnose:</strong> <a style="color:#adceff" href="https://cub4libr3.github.io/Abenteuer-W6/assets/kleidung/clothing-000.jpg?v=20261110" target="_blank">Leinenkappe</a> · <a style="color:#adceff" href="https://cub4libr3.github.io/Abenteuer-W6/assets/schmuck/accessory-001.jpg?v=20261110" target="_blank">Runenstein</a></p>
+  <h2>Ergebnisse je Bild</h2>
+  <div class="tablewrap"><table><thead><tr><th>Pfad</th><th>Status</th><th>Einzeldatei</th></tr></thead><tbody id="rows"></tbody></table></div>
+  <p class="tiny">WICHTIG: Diese Seite muss im Repository-Hauptverzeichnis neben index.html liegen. Die Vorschau unter chatgpt.com oder file:// zeigt ausdrücklich KEINE Diagnoseergebnisse. Die Links »Ansehen« führen immer direkt zur veröffentlichten GitHub-Pages-Adresse.</p>
+</main>
+<script>
+'use strict';
+const assets = [{"path":"assets/kleidung/clothing-000.jpg","fresh":"6956185a5d3b157848ce4b0ccd045f86c3bc65c7c37f4809e5ff51f7cddca9c4","old":"b98a5bd703ac725af7c9a8da593158230af566951fbf13efe41cd5338ac66369","label":"clothing-000.jpg"},{"path":"assets/kleidung/clothing-001.jpg","fresh":"64e3a2021e866fc712f62388e5d84282e6752892af5c2540d9853257f9884972","old":"60d99d57394a77c307bcba8346285f31e8419138e5bbd80fc1cc0420cb2f2425","label":"clothing-001.jpg"},{"path":"assets/kleidung/clothing-002.jpg","fresh":"b7cc6c6e5e9c433150bfc6db86b633caefd1651adaf31dbf6afce6cac682a82b","old":"a21b43dd07d4f00feb0e22351eb06d1abd311d935cfde25c99605e36fb256139","label":"clothing-002.jpg"},{"path":"assets/kleidung/clothing-003.jpg","fresh":"256d2fd6609c6e386efe377ef4642b368bc4dbf31cb8c8d3abb7bcee499eb048","old":"81841cbc1fd19dfaf6ff23bb400b3fc52b3b7bd0cea3feeb847fc5b713526aae","label":"clothing-003.jpg"},{"path":"assets/kleidung/clothing-004.jpg","fresh":"090ef942bbc7eb8ed546662b6853ba106504fce7da364c75b24782836b8e3dd0","old":"55a1af2c456a1932377ad88356b339b31e960a5776951d257da8378841f1be5d","label":"clothing-004.jpg"},{"path":"assets/kleidung/clothing-005.jpg","fresh":"37673461610ccf6b3e0b781587815ff68f5c34ae62e90932a32731c2e892f8ae","old":"3696d86afec7cec4712af5b09cc84b6fe91af9e3b9631d6df706262500cbd91b","label":"clothing-005.jpg"},{"path":"assets/kleidung/clothing-006.jpg","fresh":"d7eaf21ab00673eb7e3f901a00518719e6dee626cfb126ea4a768db43a222772","old":"73183ce0a944751ef1183ac2cd9c89b9f08a0ac4a35ebeecf8cb340524c0d104","label":"clothing-006.jpg"},{"path":"assets/kleidung/clothing-007.jpg","fresh":"f0a3bf45e24f295556462fc892db5c1c289554575bb572f8da5e574d6fe2d5ca","old":"f72c374975bc49fdf5f66659ee1df4e955f64464e81536e7a1c73509c9bf4d46","label":"clothing-007.jpg"},{"path":"assets/kleidung/clothing-008.jpg","fresh":"69fe19841afb3b548690d946930500df116d4e50161505012904574808e5d11b","old":"1b473d1ccc316bc324df7cd831a2ebfaedbebde11f2fac589423566583eee55c","label":"clothing-008.jpg"},{"path":"assets/kleidung/clothing-009.jpg","fresh":"93d9a6ef2c84031814cd9ba137da129cbef0f36b66fab7f6940c8641bbefd409","old":"6a8ad90d4b5382057b9e1e429ca8360dd61139d731d297f541fe4a0a434ed0a3","label":"clothing-009.jpg"},{"path":"assets/kleidung/clothing-010.jpg","fresh":"c85d59e680ab670b900cb792ffc22fd77a80286e59ccf818e72d0cb995455103","old":"6dff875f804ecc935e10690641c85d6782c61b91876baa6041d333b0865d8b44","label":"clothing-010.jpg"},{"path":"assets/kleidung/clothing-011.jpg","fresh":"b4dd638b5c43aa7437182e09891826704547398319423652c076649a03d24a2c","old":"7eeb359264a7eef1ab8627f2d2b32a17772d159a5db32875895d0148233faa7d","label":"clothing-011.jpg"},{"path":"assets/kleidung/clothing-012.jpg","fresh":"23f8aaa86c0a50cb084596434a3a40f6ba347863fe1728d1d7cdc1d891317aac","old":"00f6ecd6aaccdce88735e0607ea0b73fa74358e88ff79e23cf864e24da482a7c","label":"clothing-012.jpg"},{"path":"assets/kleidung/clothing-013.jpg","fresh":"f1992c8939d700350e6938e13d2350f09f35a307c54b347c3a096a8f8034061f","old":"b08de41a34a5ed0749e5f1e1f2f6e881f859b2e9c073aadf688ca6ac66668f59","label":"clothing-013.jpg"},{"path":"assets/kleidung/clothing-014.jpg","fresh":"6dfc2a55f72cc982cdc1bce10add054f36770d13d0245db1c6c239669b446b6f","old":"1ca6cd7a88ac145022c2f2c93c9d3c0f90b44fbef494202687f3e7990985e50b","label":"clothing-014.jpg"},{"path":"assets/kleidung/clothing-015.jpg","fresh":"0ab82c7cf14e038c49dfd1c2c2da7e774ca947bbaba4b13b2c0bfedf2b2ab1fc","old":"076e1ce2c36bcbf8e702e2a2cc8ab77f68fe8cf612eec2be797ba7aa512be9a4","label":"clothing-015.jpg"},{"path":"assets/kleidung/clothing-016.jpg","fresh":"653349fe04f5cdf70ddd7c4770ef005f25c3b94ab3e9748f6e40ac97ccb3915c","old":"4f504a8e8a7d553dbd400d0c535272a76018d58d1d9907077aeb1f36db65e9d4","label":"clothing-016.jpg"},{"path":"assets/kleidung/clothing-017.jpg","fresh":"f6f8446d5982f4fe160ae931fdd526b30e7afd8493939d9434dd00973d45f98e","old":"85f3d91c6e542cf18665cdbcafcf83c591d637dfb7349da6cb39a31c672ebbfc","label":"clothing-017.jpg"},{"path":"assets/schmuck/accessory-001.jpg","fresh":"4c807ca2f460f034b2c954dd36238bc178aaa8948a89719fca82382d7885aaaf","old":"42294e930edefbdae208b4b0f990929b4c850e9605a1660bf9c8c7d3ad681f15","label":"accessory-001.jpg"},{"path":"assets/schmuck/accessory-005.jpg","fresh":"854837ef07fe1fa1badb40380cc8d5970885f65214d9bfc423a5d84b1a7c6bf8","old":"2d51b014586673c319cead74a2c3340a025e4f3d6df7f935edcffd38d8611375","label":"accessory-005.jpg"},{"path":"assets/schmuck/accessory-006.jpg","fresh":"b37732ef59b7a8bdd436fdfe2b50effb9785e72c4efc547944a236461be0ef3c","old":"993c4adeb68dd937597b62a69ab2cc2b5c705f47a3ae9a5f3e41f2bc46305e37","label":"accessory-006.jpg"},{"path":"assets/schmuck/accessory-008.jpg","fresh":"dd623c397a10d86aa222be17e40e6163fa6a5d1e381ead4772b6b5337dff1461","old":"bea94767e75b53b54023001fce0549b7e6ef3691933058986051c051fe7ac104","label":"accessory-008.jpg"},{"path":"assets/schmuck/accessory-013.jpg","fresh":"34b3630c87ef2137d0140247eb603ddbbe393770388faedf402284d867395cd8","old":"a74d5d72dec68cec42ce9df3cc4e6ba1a1787f864619e3bf4c2a89547db64c2a","label":"accessory-013.jpg"},{"path":"assets/schmuck/accessory-015.jpg","fresh":"6f32048847a701d961a3ed5397cfc7877675877cdec9bca1df0b35f150fe5f78","old":"57c707a98bc065b6b1fcfe3e720814e2af5b756f2907ca01343f05c6457c6ecd","label":"accessory-015.jpg"},{"path":"assets/schmuck/accessory-016.jpg","fresh":"21e4ca5f15055ac478f21c9869fb853a0328ea19feece211ef6ded26913fea9b","old":"eae989306581312a589bb30294e56beb93f95b45fd3c72421bd780a866a34108","label":"accessory-016.jpg"},{"path":"assets/schmuck/accessory-019.jpg","fresh":"a3bd45eb97ba01d0c4840c88a6586a911b54d11ddd86b6effe3511fc18dcbf34","old":"db4b928d572f688a7a8c52e51ee15ef94f7797871477cc821cb6b5451517ab81","label":"accessory-019.jpg"}];
+const SITE_ROOT = 'https://cub4libr3.github.io/Abenteuer-W6/';
+const EXPECTED_URL = SITE_ROOT + 'Alearis-RC-10.8-Live-Bildercheck.html';
+const onRealWebsite = location.origin === new URL(SITE_ROOT).origin && location.pathname.startsWith('/Abenteuer-W6/');
+const tbody = document.getElementById('rows');
+const summary = document.getElementById('summary');
+const retry = document.getElementById('retry');
+document.getElementById('origin').textContent = location.href + (onRealWebsite ? ' (korrekter Host)' : ' (FALSCHER HOST – keine Prüfung!)');
+const escapeText = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function digestHex(buffer) {
+  if (!crypto || !crypto.subtle) throw Error('SHA-256 erfordert HTTPS.');
+  const digest = await crypto.subtle.digest('SHA-256', buffer);
+  return Array.from(new Uint8Array(digest), b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function checkFile(item) {
+  const url = new URL(item.path,SITE_ROOT);
+  url.searchParams.set('bildpruefung',String(Date.now()));
+  try {
+    const response = await fetch(url.toString(),{cache:'no-store',credentials:'same-origin'});
+    if(!response.ok) return {status:'FEHLT',text:'HTTP '+response.status,css:'bad'};
+    const buffer = await response.arrayBuffer();
+    const arr = new Uint8Array(buffer);
+    if(arr.length<4 || arr[0]!==0xff || arr[1]!==0xd8) return {status:'FEHLT / KEIN JPG',text:'Pfad liefert keine JPG-Datei',css:'bad'};
+    const hash = await digestHex(buffer);
+    if(hash === item.fresh) return {status:'NEU',text:'Identisch mit Austauschpaket',css:'good'};
+    if(hash === item.old) return {status:'ALT',text:'Originalgrafik von RC 10.8',css:'old'};
+    return {status:'ANDERS',text:'JPG vorhanden, aber andere Fassung',css:'unknown'};
+  }catch(e){return {status:'NICHT ERREICHBAR',text:e.message||String(e),css:'bad'};}
+}
+async function run() {
+  retry.disabled=true;
+  tbody.innerHTML='';
+  if(!onRealWebsite) {
+    summary.textContent='NICHT GETESTET: Bitte diese HTML-Datei auf deiner GitHub-Pages-Website öffnen.';
+    tbody.innerHTML=assets.map(item=>`<tr><td class="path">${escapeText(item.path)}</td><td><span class="unknown">NICHT GETESTET</span><div class="tiny">Prüfseite läuft auf ${escapeText(location.origin)} statt auf GitHub Pages.</div></td><td><a href="${new URL(item.path,SITE_ROOT).href}" target="_blank" rel="noopener">Live-Bild ansehen</a></td></tr>`).join('');
+    return;
+  }
+  let next=0,done=0;
+  const counts={NEU:0,ALT:0,ANDERS:0,FEHLT:0};
+  const rendered=new Array(assets.length);
+  async function worker(){
+    while(next<assets.length){
+      const i=next++;
+      const item=assets[i],v=await checkFile(item);
+      counts[v.status.startsWith('FEHLT')||v.status==='NICHT ERREICHBAR'?'FEHLT':v.status]++;
+      rendered[i] = `<tr><td class="path">${escapeText(item.path)}</td><td><span class="${v.css}">${escapeText(v.status)}</span><div class="tiny">${escapeText(v.text)}</div></td><td><a href="${new URL(item.path,SITE_ROOT).href}" target="_blank" rel="noopener">Ansehen</a></td></tr>`;
+      done++;
+      summary.textContent=`Prüfung läuft: ${done}/26 …`;
+    }
+  }
+  await Promise.all(Array.from({length:4},worker));
+  tbody.innerHTML = rendered.join('');
+  summary.textContent = `NEU: ${counts.NEU} · ALT: ${counts.ALT} · ANDERS: ${counts.ANDERS} · FEHLT: ${counts.FEHLT}`;
+  retry.disabled=false;
+}
+retry.addEventListener('click',run);
+run();
+</script></body></html>
