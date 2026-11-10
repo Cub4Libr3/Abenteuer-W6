@@ -153,7 +153,41 @@ input,select,textarea{min-width:0;box-sizing:border-box}
 .alr-equipment-sheet{background:linear-gradient(135deg,#28201a,#4e3a29)!important;border:1px solid #aa7a40!important;color:#f9e6be!important}
 .alr-equipment-sheet>summary{color:#633813!important;background:linear-gradient(#dfc28e,#cda56a)!important;border-color:#aa7a40!important}
 .alr-paper-context{margin:12px 12px 0;color:#f0d4a2;text-align:center}
-.alr-paper-grid{display:grid;grid-template-columns:minmax(135px,1fr) minmax(175px,1.45fr) minmax(135px,1fr);align-items:center;gap:12px;margin:12px!important;max-width:100%;overflow:visible!important}
+/* RC 10.8: Ausrüstungsplan nach freigegebener 3-Spalten-Skizze.
+   Oben Helm, darunter Ohr 1 / Kette / Ohr 2; in der Mitte Waffe / Rüstung / Schild bzw. ZHW;
+   Handschuhe seitlich und als Paar verknüpft; unten Ringe und Stiefel. */
+.alr-paper-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.22fr) minmax(0,1fr);grid-template-areas:
+ ". helmet ."
+ "earLeft neck earRight"
+ "weapon armor shield"
+ "gloveLeft armor gloveRight"
+ "ringLeft armor ringRight"
+ ". boots .";
+ align-items:stretch;gap:10px;width:min(100% - 24px,830px);margin:14px auto!important;max-width:100%;overflow:visible!important}
+.alr-paper-grid>.alr-paper-slot{min-height:0;align-self:stretch}
+.alr-paper-helmet{grid-area:helmet}
+.alr-paper-earLeft{grid-area:earLeft}
+.alr-paper-neck{grid-area:neck}
+.alr-paper-earRight{grid-area:earRight}
+.alr-paper-weapon{grid-area:weapon}
+.alr-paper-armor{grid-area:armor}
+.alr-paper-shield{grid-area:shield}
+.alr-paper-gloveLeft{grid-area:gloveLeft}
+.alr-paper-gloveRight{grid-area:gloveRight}
+.alr-paper-ringLeft{grid-area:ringLeft}
+.alr-paper-ringRight{grid-area:ringRight}
+.alr-paper-boots{grid-area:boots}
+.alr-paper-armor{background:radial-gradient(ellipse at 50% 40%,#5a452c 0%,#2f251d 60%,#1a1511 100%)!important;border:2px solid #c49957!important;box-shadow:inset 0 0 28px #140e0b,0 0 0 1px #5d462d}
+.alr-paper-armor .alr-paper-label{font-size:1.1rem}
+.alr-paper-armor .alr-paper-image{width:100%;height:100%;min-height:180px;flex:1;display:grid;place-items:center}
+.alr-paper-armor .alr-paper-image .alr-item-thumb{width:100%;height:100%;max-height:390px;max-width:250px;object-fit:contain;border:1px solid #ad864e}
+.alr-paper-armor .alr-paper-empty{width:min(88%,170px);height:220px;font-size:2.3rem;border-color:#aa8350}
+.alr-paper-twohanded{border-color:#ceac6b!important}
+.alr-paper-twohanded .alr-paper-hint{font-size:.7rem;line-height:1.3;color:#e2c48c}
+.alr-paper-grid .alr-paper-slot{min-width:0}
+.alr-paper-grid .alr-paper-label{overflow-wrap:anywhere}
+.alr-paper-grid .alr-paper-name{min-height:1.25em}
+
 .alr-paper-middle{min-width:0;display:grid;justify-items:center;gap:10px}
 .alr-paper-side{min-width:0;display:grid;gap:12px}
 .alr-paper-character{width:100%;max-width:270px;min-height:310px;background:radial-gradient(ellipse,#52432e,#211912 75%);border:2px solid #a77e44;border-radius:100px 100px 22px 22px;box-shadow:inset 0 0 40px #0e0b0a;display:grid;place-items:center;overflow:hidden}
@@ -168,7 +202,7 @@ input,select,textarea{min-width:0;box-sizing:border-box}
 .alr-paper-rules{margin:0 12px 12px;font-size:.84rem;line-height:1.45;background:#1a1410;border:1px solid #866437;border-radius:8px;padding:10px;color:#dfc498}
 .alr-loot-item-image{width:49px;height:49px;object-fit:contain;border-radius:6px;flex:0 0 auto;border:1px solid #ac824e}
 .alr-loot-image-preview{margin:7px 0;display:flex;align-items:center;gap:12px}
-@media(max-width:630px){.alr-paper-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.alr-paper-middle{grid-column:1/-1;grid-row:1}.alr-paper-side{grid-column:auto;align-self:start}.alr-paper-character{min-height:235px;max-height:285px}.alr-figure{max-height:280px}.alr-paper-label{font-size:.79rem}.alr-paper-slot{padding:5px}.alr-paper-slot select{font-size:.7rem}.alr-new-shop-grid{grid-template-columns:1fr}.alr-item-thumb{width:40px;height:40px}.alr-new-shop-item>.alr-item-thumb{width:56px;height:56px}}
+@media(max-width:630px){.alr-paper-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr);gap:6px;width:calc(100% - 10px);margin:9px auto!important}.alr-paper-grid .alr-paper-slot{padding:5px 3px;border-radius:6px;gap:3px}.alr-paper-grid .alr-paper-label{font-size:.73rem;line-height:1.2}.alr-paper-grid .alr-paper-name{font-size:.64rem;line-height:1.15}.alr-paper-grid .alr-paper-image{width:49px;height:49px}.alr-paper-grid .alr-paper-image .alr-item-thumb{width:47px;height:47px}.alr-paper-grid .alr-paper-empty{width:43px;height:43px;font-size:1rem}.alr-paper-grid .alr-paper-empty small{font-size:.57rem}.alr-paper-grid .alr-paper-slot select{font-size:.65rem;padding:4px 2px;min-height:29px}.alr-paper-grid .alr-paper-armor .alr-paper-image{width:100%;height:100%;min-height:160px}.alr-paper-grid .alr-paper-armor .alr-item-thumb{width:100%;height:100%;max-height:340px;max-width:210px}.alr-paper-grid .alr-paper-armor .alr-paper-empty{width:80%;height:140px}.alr-paper-grid .alr-paper-twohanded .alr-paper-hint{font-size:.59rem}.alr-new-shop-grid{grid-template-columns:1fr}.alr-item-thumb{width:40px;height:40px}.alr-new-shop-item>.alr-item-thumb{width:56px;height:56px}}
 
 
 /* Alearis RC 10.8 – einheitliche, mobil lesbare Shopansicht */
@@ -659,28 +693,40 @@ function paperAccessorySlots(h){const out={left:-1,right:-1,neck:-1},p=h.paperRi
  if(out.neck<0&&neck.length)out.neck=neck[0];return out;}
 function paperdollFigure(h){const bodyColor=h.armorId>=0&&h.ownedArmors?.[h.armorId]?'#8d6a3c':'#705342',head=h.equippedClothing?.head>=0&&h.ownedClothing?.[h.equippedClothing.head],boots=h.equippedClothing?.boots>=0&&h.ownedClothing?.[h.equippedClothing.boots];return `<svg class="alr-figure" viewBox="0 0 200 420" role="img" aria-label="Charakter von vorn mit angelegter Ausrüstung"><defs><linearGradient id="paperfigurearmor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d8b26d"/><stop offset=".5" stop-color="${bodyColor}"/><stop offset="1" stop-color="#33291e"/></linearGradient></defs><circle cx="100" cy="206" r="92" fill="none" stroke="#b68a48" stroke-opacity=".45" stroke-width="2"/><circle cx="100" cy="206" r="75" fill="none" stroke="#b68a48" stroke-opacity=".22"/><path d="M73 247L65 377Q73 393 87 385L100 286L112 385Q129 395 136 376L125 247Z" fill="#3e3430" stroke="#957447" stroke-width="5"/><path d="M67 360L87 357L87 388L61 390Z M114 357L134 360L139 389L113 389Z" fill="${boots?'#99683d':'#46382c'}" stroke="#b49358" stroke-width="3"/><path d="M64 99L39 135L20 252Q32 263 42 245L63 172L69 250L131 250L137 170L158 245Q168 263 180 252L161 135L135 99Z" fill="url(#paperfigurearmor)" stroke="#e3c18a" stroke-width="4"/><path d="M69 111L100 145L131 111L124 233H76Z" fill="#2d2927" stroke="#b69453" stroke-width="4"/><path d="M77 156L100 165L123 156M76 207H124" stroke="#c9a05b" stroke-width="4"/><circle cx="100" cy="66" r="34" fill="#b79071" stroke="#e0bc88" stroke-width="3"/>${head?'<path d="M66 69Q65 22 100 20Q135 22 134 69L125 67L120 50H80L74 68Z" fill="#89744c" stroke="#ddbb7a" stroke-width="3"/>':'<path d="M70 45Q100 5 130 45L125 52Q101 30 76 54Z" fill="#3d2b23"/>'}<path d="M71 244H129" stroke="#e5c181" stroke-width="7"/></svg>`;}
 function paperdollMarkup(h,i){const editable=canManage(room?.heroes?.[i]),accessory=paperAccessorySlots(h),ear=paperEarSlots(h);
+ const equippedGloves=Number(h.equippedClothing?.gloves??-1);
  const slots=[
-  ['helmet','Helm / Kopfbedeckung','clothing','head',Number(h.equippedClothing?.head??-1)],
-  ['weapon','Waffe','weapon',null,Number(h.weaponId??-1)],
-  ['shield','Schild','shield',null,Number(h.shieldId??-1)],
-  ['armor','Rüstung','armor',null,Number(h.armorId??-1)],
-  ['gloves','Handschuhe','clothing','gloves',Number(h.equippedClothing?.gloves??-1)],
-  ['boots','Stiefel','clothing','boots',Number(h.equippedClothing?.boots??-1)],
-  ['ringLeft','Ring links','accessory','ring',accessory.left],
-  ['ringRight','Ring rechts','accessory','ring',accessory.right],
+   ['helmet','Helm / Kappe','clothing','head',Number(h.equippedClothing?.head??-1)],
    ['earLeft','Ohrring / Piercing 1','accessory','ear',ear.left],
+   ['neck','Kette / Amulett','accessory','neck',accessory.neck],
    ['earRight','Ohrring / Piercing 2','accessory','ear',ear.right],
-   ['neck','Kette / Amulett','accessory','neck',accessory.neck]
+   ['weapon','Waffe','weapon',null,Number(h.weaponId??-1)],
+   ['shield','Schild','shield',null,Number(h.shieldId??-1)],
+   ['armor','Rüstung','armor',null,Number(h.armorId??-1)],
+   // Ein im Shop erworbenes Handschuh-PAAR belegt beide visuellen Handplätze.
+   // Beide Auswahlfelder bearbeiten dieselbe Speicherung equippedClothing.gloves,
+   // damit ein Paar nicht doppelt gezählt oder ein zweiter Kauf erzwungen wird.
+   ['gloveLeft','Handschuh links','clothing','gloves',equippedGloves],
+   ['gloveRight','Handschuh rechts','clothing','gloves',equippedGloves],
+   ['ringLeft','Ring 1','accessory','ring',accessory.left],
+   ['ringRight','Ring 2','accessory','ring',accessory.right],
+   ['boots','Stiefel','clothing','boots',Number(h.equippedClothing?.boots??-1)]
  ];
  const slotHTML=([slot,label,kind,filter,value])=>{
-  const ownedField={weapon:'ownedWeapons',armor:'ownedArmors',clothing:'ownedClothing',shield:'ownedShields',accessory:'ownedAccessories'}[kind];
-  const choices=itemCatalog(kind).map((item,id)=>({item,id})).filter(({item,id})=>h[ownedField]?.[id]&&(!filter||(kind==='clothing'?item.slot===filter:(filter==='neck'?/^(Halskette|Talisman|Amulett)/i:filter==='ear'?/^(Ohrring|Piercing)/i:/^Ring /i).test(item.name||item[0])))&&(kind!=='weapon'||(item[1]<=allowedWeaponLevel(h)&&(!isStaff(id)||h.role==='Magier')))&&(kind!=='armor'||item[1]<=h.xpLevel)&&(kind!=='clothing'&&kind!=='shield'||item.level<=h.xpLevel));
-  const selected=value>=0&&h[ownedField]?.[value]?value:-1;
-  const isExtra=slot==='shield'&&(!weaponIsOneHanded(h.weaponId)||!h.ownedWeapons?.[h.weaponId]);
-  return `<div class="alr-paper-slot alr-paper-${slot}"><span class="alr-paper-label">${label}</span><div class="alr-paper-image">${selected>=0?itemThumb(kind,selected):'<span class="alr-paper-empty">✦<small>Leer</small></span>'}</div><span class="alr-paper-name">${selected>=0?esc(itemName(kind,selected)):'Nicht angelegt'}</span>${editable?`<select data-paper-slot="${slot}" data-index="${i}" aria-label="${label} anlegen"><option value="-1">– Ablegen –</option>${choices.map(({id})=>`<option value="${id}" ${id===selected?'selected':''}>${esc(itemName(kind,id))}${kind==='weapon'?' · '+weaponGrip(id):''}</option>`).join('')}</select>`:''}${isExtra?'<small class="alr-paper-warning">Schild nur mit EHW</small>':''}</div>`;
+   const ownedField={weapon:'ownedWeapons',armor:'ownedArmors',clothing:'ownedClothing',shield:'ownedShields',accessory:'ownedAccessories'}[kind];
+   const choices=itemCatalog(kind).map((item,id)=>({item,id})).filter(({item,id})=>h[ownedField]?.[id]&&(!filter||(kind==='clothing'?item.slot===filter:(filter==='neck'?/^(Halskette|Talisman|Amulett)/i:filter==='ear'?/^(Ohrring|Piercing)/i:/^Ring /i).test(item.name||item[0])))&&(kind!=='weapon'||(item[1]<=allowedWeaponLevel(h)&&(!isStaff(id)||h.role==='Magier')))&&(kind!=='armor'||item[1]<=h.xpLevel)&&(kind!=='clothing'&&kind!=='shield'||item.level<=h.xpLevel));
+   const selected=value>=0&&h[ownedField]?.[value]?value:-1;
+   const isExtra=slot==='shield'&&(!weaponIsOneHanded(h.weaponId)||!h.ownedWeapons?.[h.weaponId]);
+   return `<div class="alr-paper-slot alr-paper-${slot}"><span class="alr-paper-label">${label}</span><div class="alr-paper-image">${selected>=0?itemThumb(kind,selected):'<span class="alr-paper-empty">✦<small>Leer</small></span>'}</div><span class="alr-paper-name">${selected>=0?esc(itemName(kind,selected)):'Nicht angelegt'}</span>${editable?`<select data-paper-slot="${slot}" data-index="${i}" aria-label="${label} anlegen"><option value="-1">– Ablegen –</option>${choices.map(({id})=>`<option value="${id}" ${id===selected?'selected':''}>${esc(itemName(kind,id))}${kind==='weapon'?' · '+weaponGrip(id):''}</option>`).join('')}</select>`:''}${isExtra?'<small class="alr-paper-warning">Schild nur mit EHW</small>':''}</div>`;
  };
  const lookup=Object.fromEntries(slots.map(x=>[x[0],slotHTML(x)]));
- return `<details class="sheet-fold alr-equipment-sheet" data-equipment-fold="${i}"><summary>🛡️ Ausrüstung</summary><div class="alr-paper-context"><b>${esc(h.name)}</b> · ${esc(h.role)} · Stufe ${h.xpLevel} · <b>RS ${equipmentRS(h)}</b></div><div class="alr-paper-grid"><div class="alr-paper-side">${lookup.weapon}${lookup.gloves}${lookup.ringLeft}${lookup.earLeft}</div><div class="alr-paper-middle">${lookup.helmet}<div class="alr-paper-character">${paperdollFigure(h)}</div>${lookup.armor}</div><div class="alr-paper-side">${lookup.neck}${lookup.shield}${lookup.boots}${lookup.ringRight}${lookup.earRight}</div></div><p class="alr-paper-rules"><b>EHW</b> = Einhandwaffe · <b>ZHW</b> = Zweihandwaffe · Schild nur mit ausgerüsteter EHW · Magierstäbe immer ZHW. Für Ohrringe und Piercings stehen zusammen genau <b>zwei Plätze</b> zur Verfügung. Angelegte Teile bleiben beim Charakter.</p></details>`;
+ const weaponId=Number(h.weaponId??-1);
+ const zhwActive=weaponId>=0&&!!h.ownedWeapons?.[weaponId]&&weaponGrip(weaponId)==='ZHW';
+ // Eine Zweihandwaffe ist EIN Inventarobjekt und benötigt beide Hände.
+ // Rechts wird sie nur gespiegelt angezeigt, nicht separat ausgerüstet.
+ const rightHand=zhwActive
+   ?`<div class="alr-paper-slot alr-paper-shield alr-paper-twohanded"><span class="alr-paper-label">Zweihandwaffe</span><div class="alr-paper-image">${itemThumb('weapon',weaponId)}</div><span class="alr-paper-name">${esc(itemName('weapon',weaponId))}</span><small class="alr-paper-hint">Beide Hände belegt · kein Schild</small></div>`
+   :lookup.shield;
+ return `<details class="sheet-fold alr-equipment-sheet" data-equipment-fold="${i}"><summary>🛡️ Ausrüstung</summary><div class="alr-paper-context"><b>${esc(h.name)}</b> · ${esc(h.role)} · Stufe ${h.xpLevel} · <b>RS ${equipmentRS(h)}</b></div><div class="alr-paper-grid">${lookup.helmet}${lookup.earLeft}${lookup.neck}${lookup.earRight}${lookup.weapon}${lookup.armor}${rightHand}${lookup.gloveLeft}${lookup.gloveRight}${lookup.ringLeft}${lookup.ringRight}${lookup.boots}</div><p class="alr-paper-rules"><b>EHW</b> = Einhandwaffe · <b>ZHW</b> = Zweihandwaffe. Bei einer ZHW ist die rechte Hand automatisch belegt, ein Schild kann dann nicht angelegt werden. Ein Handschuhpaar gilt für beide Hände und wird nur einmal berechnet. Insgesamt sind <b>zwei Ohrringe und/oder Piercings</b> möglich.</p></details>`;
 }
 async function saveClothingEquip(i,slot,id){try{if(!['head','boots','gloves'].includes(slot))throw Error('Unbekannter Platz.');const h=normalized(room?.heroes?.[i]||{});if(!canManage(room?.heroes?.[i]))throw Error('Keine Berechtigung.');if(id!==-1&&(!Number.isInteger(id)||!clothing[id]||clothing[id].slot!==slot||!h.ownedClothing?.[id]||clothing[id].level>h.xpLevel))throw Error('Kleidung nicht vorhanden oder Stufe zu niedrig.');await set(ref(db,`rooms/${roomKey}/heroes/${i}/equippedClothing/${slot}`),id);}catch(e){alert('Kleidung anlegen: '+e.message);render();}}
 async function saveShieldEquip(i,id){try{const h=normalized(room?.heroes?.[i]||{});if(!canManage(room?.heroes?.[i]))throw Error('Keine Berechtigung.');if(id!==-1){if(!Number.isInteger(id)||!shields[id]||!h.ownedShields?.[id]||shields[id].level>h.xpLevel)throw Error('Schild nicht gekauft oder Stufe zu niedrig.');if(!weaponIsOneHanded(h.weaponId)||!h.ownedWeapons?.[h.weaponId])throw Error('Schild darf nur zusammen mit einer ausgerüsteten Einhandwaffe getragen werden.');}await set(ref(db,`rooms/${roomKey}/heroes/${i}/shieldId`),id);}catch(e){alert('Schild anlegen: '+e.message);render();}}
@@ -698,7 +744,7 @@ async function saveEarAccessory(i,side,id){try{
  if(id>=0)changes[`equippedAccessories/${id}`]=1;
  await update(ref(db,`rooms/${roomKey}/heroes/${i}`),changes);
  }catch(e){alert('Ohrring/Piercing anlegen: '+firebaseWriteHelp(e,i));render();}}
-function bindPaperSlots(root){root.querySelectorAll('[data-paper-slot]').forEach(select=>select.onchange=async()=>{const i=select.dataset.index,slot=select.dataset.paperSlot,id=Number(select.value);select.disabled=true;try{if(slot==='weapon'||slot==='armor')await saveEquip(i,slot==='weapon'?'weaponId':'armorId',id);else if(slot==='shield')await saveShieldEquip(i,id);else if(['gloves','helmet','boots'].includes(slot))await saveClothingEquip(i,slot==='helmet'?'head':slot,id);else if(slot==='earLeft'||slot==='earRight')await saveEarAccessory(i,slot==='earLeft'?'left':'right',id);else await savePaperAccessory(i,slot==='ringLeft'?'left':slot==='ringRight'?'right':'neck',id);}finally{if(select.isConnected)select.disabled=false;}});}
+function bindPaperSlots(root){root.querySelectorAll('[data-paper-slot]').forEach(select=>select.onchange=async()=>{const i=select.dataset.index,slot=select.dataset.paperSlot,id=Number(select.value);select.disabled=true;try{if(slot==='weapon'||slot==='armor')await saveEquip(i,slot==='weapon'?'weaponId':'armorId',id);else if(slot==='shield')await saveShieldEquip(i,id);else if(['gloveLeft','gloveRight','helmet','boots'].includes(slot))await saveClothingEquip(i,slot==='helmet'?'head':slot.startsWith('glove')?'gloves':slot,id);else if(slot==='earLeft'||slot==='earRight')await saveEarAccessory(i,slot==='earLeft'?'left':'right',id);else await savePaperAccessory(i,slot==='ringLeft'?'left':slot==='ringRight'?'right':'neck',id);}finally{if(select.isConnected)select.disabled=false;}});}
 function firebaseWriteHelp(error,i){
  const msg=String(error?.message||error||'Unbekannter Fehler');
  const code=String(error?.code||'');
