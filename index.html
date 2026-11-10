@@ -150,8 +150,8 @@ input,select,textarea{min-width:0;box-sizing:border-box}
 .alr-new-shop-item>.alr-item-thumb{width:65px;height:65px}
 .alr-new-shop-copy{flex:1;min-width:0}.alr-new-shop-copy b{font-size:.93rem;display:block}.alr-new-shop-copy small{display:block;font-size:.75rem}
 .alr-new-shop-actions{display:grid;gap:4px}.alr-new-shop-actions button{padding:6px;font-size:.78rem;min-height:30px}
-.alr-equipment-sheet{background:linear-gradient(135deg,#28201a,#4e3a29)!important;border:2px ridge #ba8a43!important;color:#f9e6be!important}
-.alr-equipment-sheet>summary{color:#f7e3ad!important;background:linear-gradient(#725226,#3c2c1d)!important;border-color:#ba8a43!important}
+.alr-equipment-sheet{background:linear-gradient(135deg,#28201a,#4e3a29)!important;border:1px solid #aa7a40!important;color:#f9e6be!important}
+.alr-equipment-sheet>summary{color:#633813!important;background:linear-gradient(#dfc28e,#cda56a)!important;border-color:#aa7a40!important}
 .alr-paper-context{margin:12px 12px 0;color:#f0d4a2;text-align:center}
 .alr-paper-grid{display:grid;grid-template-columns:minmax(135px,1fr) minmax(175px,1.45fr) minmax(135px,1fr);align-items:center;gap:12px;margin:12px!important;max-width:100%;overflow:visible!important}
 .alr-paper-middle{min-width:0;display:grid;justify-items:center;gap:10px}
@@ -444,9 +444,9 @@ const spells=[
 ];
 const tierCap=()=>10;
 const presets=[{stats:[6,3,2,3,2,2]},{stats:[3,6,3,2,2,2]},{stats:[4,4,3,3,2,2]},{stats:[3,5,3,3,2,2]}];
-const hero=i=>{const p=presets[i]||presets[0];return {name:'Noch ohne Namen',role:roles[i]||'Krieger',race:'Mensch',stats:Object.fromEntries(attrs.map((a,j)=>[a,p.stats[j]])),weaponId:-1,armorId:-1,shieldId:-1,xpLevel:0,xp:0,gold:50,ownedWeapons:{},ownedArmors:{},ownedClothing:{},ownedShields:{},equippedClothing:{head:-1,boots:-1,gloves:-1},paperRings:{left:-1,right:-1,neck:-1},ownedAccessories:{},equippedAccessories:{},druidTalisman:false,spells:{},potions:{},activeBoosts:{},spellBoosts:{},activeSpells:{},mana:null,hp:18,maxHp:18,inventory:'',notes:'',gender:'',hairColor:'',eyeColor:'',heightCm:'',weightKg:'',creatorName:'',creatorUid:'',poolId:'',creationComplete:false,owner:'',specialAbilityChoiceV2:true,rulesVersion:4};};
+const hero=i=>{const p=presets[i]||presets[0];return {name:'Noch ohne Namen',role:roles[i]||'Krieger',race:'Mensch',stats:Object.fromEntries(attrs.map((a,j)=>[a,p.stats[j]])),weaponId:-1,armorId:-1,shieldId:-1,xpLevel:0,xp:0,gold:50,ownedWeapons:{},ownedArmors:{},ownedClothing:{},ownedShields:{},equippedClothing:{head:-1,boots:-1,gloves:-1},paperRings:{left:-1,right:-1,neck:-1},earSlots:{left:-1,right:-1},ownedAccessories:{},equippedAccessories:{},druidTalisman:false,spells:{},potions:{},activeBoosts:{},spellBoosts:{},activeSpells:{},mana:null,hp:18,maxHp:18,inventory:'',notes:'',gender:'',hairColor:'',eyeColor:'',heightCm:'',weightKg:'',creatorName:'',creatorUid:'',poolId:'',creationComplete:false,owner:'',specialAbilityChoiceV2:true,rulesVersion:4};};
 function levelForXp(xp){let level=0;for(let j=1;j<thresholds.length;j++)if(xp>=thresholds[j])level=j;return level;}
-function normalized(h){const p=hero(0);const x=Math.max(0,Math.min(1000,Number(h.xp)||0));const manaMax=manaMaximum(h);return {...p,...h,mana:manaMax===null?null:Math.max(0,Math.min(manaMax,Number(h.mana??manaMax))),stats:{...p.stats,...(h.stats||{})},race:races[h.race]?h.race:'Mensch',role:classes[h.role]?h.role:'Krieger',xp:x,xpLevel:levelForXp(x),gold:Number(h.gold??50),ownedWeapons:h.ownedWeapons||{},ownedArmors:h.ownedArmors||{},ownedClothing:h.ownedClothing||{},ownedShields:h.ownedShields||{},equippedClothing:{head:-1,boots:-1,gloves:-1,...(h.equippedClothing||{})},paperRings:{left:-1,right:-1,neck:-1,...(h.paperRings||{})},shieldId:Number.isInteger(Number(h.shieldId))?Number(h.shieldId):-1,ownedAccessories:h.ownedAccessories||{},equippedAccessories:h.equippedAccessories||{},druidTalisman:h.druidTalisman===true,spells:h.spells||{},potions:h.potions||{},activeBoosts:h.activeBoosts||{},spellBoosts:h.spellBoosts||{},activeSpells:h.activeSpells||{},classChoices:h.classChoices||{},specialAbilityChoiceV2:h.specialAbilityChoiceV2===true,maxHp:18+2*levelForXp(x)+(races[h.race]?.hp||0),hp:Math.min(18+2*levelForXp(x)+(races[h.race]?.hp||0),Number(h.hp??(18+2*levelForXp(x)+(races[h.race]?.hp||0))))};}
+function normalized(h){const p=hero(0);const x=Math.max(0,Math.min(1000,Number(h.xp)||0));const manaMax=manaMaximum(h);return {...p,...h,mana:manaMax===null?null:Math.max(0,Math.min(manaMax,Number(h.mana??manaMax))),stats:{...p.stats,...(h.stats||{})},race:races[h.race]?h.race:'Mensch',role:classes[h.role]?h.role:'Krieger',xp:x,xpLevel:levelForXp(x),gold:Number(h.gold??50),ownedWeapons:h.ownedWeapons||{},ownedArmors:h.ownedArmors||{},ownedClothing:h.ownedClothing||{},ownedShields:h.ownedShields||{},equippedClothing:{head:-1,boots:-1,gloves:-1,...(h.equippedClothing||{})},paperRings:{left:-1,right:-1,neck:-1,...(h.paperRings||{})},earSlots:{left:-1,right:-1,...(h.earSlots||{})},shieldId:Number.isInteger(Number(h.shieldId))?Number(h.shieldId):-1,ownedAccessories:h.ownedAccessories||{},equippedAccessories:h.equippedAccessories||{},druidTalisman:h.druidTalisman===true,spells:h.spells||{},potions:h.potions||{},activeBoosts:h.activeBoosts||{},spellBoosts:h.spellBoosts||{},activeSpells:h.activeSpells||{},classChoices:h.classChoices||{},specialAbilityChoiceV2:h.specialAbilityChoiceV2===true,maxHp:18+2*levelForXp(x)+(races[h.race]?.hp||0),hp:Math.min(18+2*levelForXp(x)+(races[h.race]?.hp||0),Number(h.hp??(18+2*levelForXp(x)+(races[h.race]?.hp||0))))};}
 function manaMaximum(h){return h.role==='Magier'?Math.max(0,20+(races[h.race]?.mana||0)):h.role==='Druide'?Math.max(0,15+(races[h.race]?.mana||0)):null;}
 const skillDefs=[['Schleichen',['geschicklichkeit','sinnesschaerfe']],['Tarnen',['geschicklichkeit','intelligenz','sinnesschaerfe']],['Schlösser knacken',['geschicklichkeit','intelligenz']],['Feuer machen',['intelligenz','willenskraft']],['Waffenloser Kampf',['staerke','geschicklichkeit']],['Balancieren',['geschicklichkeit','willenskraft']],['Überreden',['charisma','intelligenz']],['Lauschen',['sinnesschaerfe','willenskraft']],['Seile und Knoten',['geschicklichkeit','intelligenz']],['Regeneration',['staerke','willenskraft']],['Trinkfestigkeit',['staerke','willenskraft']],['Glücksspiel',['intelligenz','charisma']],['Ablenken',['charisma','geschicklichkeit']],['Spuren lesen',['sinnesschaerfe','intelligenz']],['Fallen entdecken',['sinnesschaerfe','intelligenz','geschicklichkeit']],['Klettern',['staerke','geschicklichkeit']],['Schwimmen',['staerke','willenskraft']],['Heilkunde',['intelligenz','willenskraft']],['Handeln',['charisma','intelligenz']],['Orientierung',['sinnesschaerfe','intelligenz']],['Einschüchtern',['staerke','charisma']],['Angeln',['sinnesschaerfe','geschicklichkeit','willenskraft']]];
 function skillLevel(h,keys){const st=effectiveStats(h);return Math.max(0,Math.floor(keys.reduce((sum,k)=>sum+st[k],0)/keys.length));}
@@ -518,7 +518,10 @@ const accessories=[
  ['Amulett der Flammen',145,'attack',1],['Halskette der Konzentration',135,'mw',1],
  ['Talisman des Schattens',150,'ini',1]
 ];
-const accessoryBonus=(h,key)=>accessories.reduce((sum,a,i)=>sum+(h.equippedAccessories?.[i]&&h.ownedAccessories?.[i]&&a[2]===key?a[3]:0),0);
+function accessoryBonus(h,key){
+ const earInUse=new Set(Object.values(paperEarSlots(h)).filter(id=>id>=0));
+ return accessories.reduce((sum,a,i)=>sum+(h.equippedAccessories?.[i]&&h.ownedAccessories?.[i]&&a[2]===key&&(!isEarAccessory(i)||earInUse.has(i))?a[3]:0),0);
+}
 const mrFor=h=>(races[h.race]?.mr||0)+armorMr(h.ownedArmors?.[h.armorId]?h.armorId:-1)+accessoryBonus(h,'mr');
 const armorPrices=[18,22,30,35,55,75,130,145,190,240,380,400,690,700,1350];
 const potions=[
@@ -636,14 +639,26 @@ function newShopMarkup(i,h){
  const itemRows=(kind,slot)=>itemCatalog(kind).map((x,id)=>({x,id})).filter(({x})=>!slot||x.slot===slot).map(({x,id})=>`<div class="alr-new-shop-item">${itemThumb(kind,id)}<div class="alr-new-shop-copy"><b>${esc(x.name)}</b><small>Stufe ${x.level} · RS +${x.rs}</small><small>${x.price} Gold</small></div><div class="alr-new-shop-actions"><button type="button" data-buy-row="${kind}" data-index="${i}" data-id="${id}" ${!merchantAllowed(kind,i)||h.gold<x.price||h.xpLevel<x.level?'disabled':''}>Kaufen</button>${Number(h[kind==='clothing'?'ownedClothing':'ownedShields']?.[id])>0?`<button type="button" data-sell-row="${kind}" data-index="${i}" data-id="${id}">Verkaufen</button>`:''}</div></div>`).join('');
  return `<details class="store-fold"><summary>🧥 Kleidung – Kopfbedeckungen, Stiefel und Handschuhe</summary><p class="muted">Leichte Kleidung mit 0–1 Rüstungsschutz. Pro Kategorie kann ein Gegenstand angelegt werden.</p><div data-merchant-note="clothing"></div>${[['head','Kopfbedeckungen'],['boots','Stiefel'],['gloves','Handschuhe']].map(([slot,title])=>`<h4>${title}</h4><div class="alr-new-shop-grid">${itemRows('clothing',slot)}</div>`).join('')}</details><details class="store-fold"><summary>🛡️ Schildladen – 10 Schilde</summary><p class="muted">Schilde bringen 1–2 RS und dürfen ausschließlich zusammen mit einer angelegten Einhandwaffe getragen werden.</p><div data-merchant-note="shield"></div><div class="alr-new-shop-grid">${itemRows('shield')}</div></details>`;
 }
-function accessoryPaperList(h,slot){return accessories.map((a,id)=>({id,name:a[0]})).filter(x=>h.ownedAccessories?.[x.id]&&(slot==='neck'?/^(Halskette|Talisman|Amulett)/i.test(x.name):/^Ring /i.test(x.name)));}
+function isEarAccessory(id){return /^(Ohrring|Piercing)\b/i.test(accessories[Number(id)]?.[0]||'');}
+function accessoryPaperList(h,slot){return accessories.map((a,id)=>({id,name:a[0]})).filter(x=>h.ownedAccessories?.[x.id]&&(slot==='neck'?/^(Halskette|Talisman|Amulett)/i.test(x.name):slot==='ear'?isEarAccessory(x.id):/^Ring /i.test(x.name)));}
+// Values from old saves (equippedAccessories only) are shown and migrated when an ear slot changes.
+function paperEarSlots(h){
+ const out={left:-1,right:-1},stored=h.earSlots||{};
+ const active=accessories.map((_,id)=>id).filter(id=>isEarAccessory(id)&&h.ownedAccessories?.[id]&&h.equippedAccessories?.[id]);
+ for(const side of ['left','right']){
+  const id=Number(stored[side]);
+  if(Number.isInteger(id)&&active.includes(id)&&!Object.values(out).includes(id))out[side]=id;
+ }
+ for(const side of ['left','right'])if(out[side]<0)out[side]=active.find(id=>!Object.values(out).includes(id))??-1;
+ return out;
+}
 function paperAccessorySlots(h){const out={left:-1,right:-1,neck:-1},p=h.paperRings||{};const rings=accessoryPaperList(h,'ring').filter(x=>h.equippedAccessories?.[x.id]).map(x=>x.id),neck=accessoryPaperList(h,'neck').filter(x=>h.equippedAccessories?.[x.id]).map(x=>x.id);
  for(const k of ['left','right','neck'])if(Number.isInteger(Number(p[k]))&&Number(p[k])>=0&&h.ownedAccessories?.[p[k]]&&h.equippedAccessories?.[p[k]])out[k]=Number(p[k]);
  if(out.left<0&&rings.length)out.left=rings.find(id=>id!==out.right)??-1;
  if(out.right<0&&rings.length)out.right=rings.find(id=>id!==out.left)??-1;
  if(out.neck<0&&neck.length)out.neck=neck[0];return out;}
 function paperdollFigure(h){const bodyColor=h.armorId>=0&&h.ownedArmors?.[h.armorId]?'#8d6a3c':'#705342',head=h.equippedClothing?.head>=0&&h.ownedClothing?.[h.equippedClothing.head],boots=h.equippedClothing?.boots>=0&&h.ownedClothing?.[h.equippedClothing.boots];return `<svg class="alr-figure" viewBox="0 0 200 420" role="img" aria-label="Charakter von vorn mit angelegter Ausrüstung"><defs><linearGradient id="paperfigurearmor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d8b26d"/><stop offset=".5" stop-color="${bodyColor}"/><stop offset="1" stop-color="#33291e"/></linearGradient></defs><circle cx="100" cy="206" r="92" fill="none" stroke="#b68a48" stroke-opacity=".45" stroke-width="2"/><circle cx="100" cy="206" r="75" fill="none" stroke="#b68a48" stroke-opacity=".22"/><path d="M73 247L65 377Q73 393 87 385L100 286L112 385Q129 395 136 376L125 247Z" fill="#3e3430" stroke="#957447" stroke-width="5"/><path d="M67 360L87 357L87 388L61 390Z M114 357L134 360L139 389L113 389Z" fill="${boots?'#99683d':'#46382c'}" stroke="#b49358" stroke-width="3"/><path d="M64 99L39 135L20 252Q32 263 42 245L63 172L69 250L131 250L137 170L158 245Q168 263 180 252L161 135L135 99Z" fill="url(#paperfigurearmor)" stroke="#e3c18a" stroke-width="4"/><path d="M69 111L100 145L131 111L124 233H76Z" fill="#2d2927" stroke="#b69453" stroke-width="4"/><path d="M77 156L100 165L123 156M76 207H124" stroke="#c9a05b" stroke-width="4"/><circle cx="100" cy="66" r="34" fill="#b79071" stroke="#e0bc88" stroke-width="3"/>${head?'<path d="M66 69Q65 22 100 20Q135 22 134 69L125 67L120 50H80L74 68Z" fill="#89744c" stroke="#ddbb7a" stroke-width="3"/>':'<path d="M70 45Q100 5 130 45L125 52Q101 30 76 54Z" fill="#3d2b23"/>'}<path d="M71 244H129" stroke="#e5c181" stroke-width="7"/></svg>`;}
-function paperdollMarkup(h,i){const editable=canManage(room?.heroes?.[i]),accessory=paperAccessorySlots(h);
+function paperdollMarkup(h,i){const editable=canManage(room?.heroes?.[i]),accessory=paperAccessorySlots(h),ear=paperEarSlots(h);
  const slots=[
   ['helmet','Helm / Kopfbedeckung','clothing','head',Number(h.equippedClothing?.head??-1)],
   ['weapon','Waffe','weapon',null,Number(h.weaponId??-1)],
@@ -653,23 +668,48 @@ function paperdollMarkup(h,i){const editable=canManage(room?.heroes?.[i]),access
   ['boots','Stiefel','clothing','boots',Number(h.equippedClothing?.boots??-1)],
   ['ringLeft','Ring links','accessory','ring',accessory.left],
   ['ringRight','Ring rechts','accessory','ring',accessory.right],
-  ['neck','Kette / Amulett','accessory','neck',accessory.neck]
+   ['earLeft','Ohrring / Piercing 1','accessory','ear',ear.left],
+   ['earRight','Ohrring / Piercing 2','accessory','ear',ear.right],
+   ['neck','Kette / Amulett','accessory','neck',accessory.neck]
  ];
  const slotHTML=([slot,label,kind,filter,value])=>{
   const ownedField={weapon:'ownedWeapons',armor:'ownedArmors',clothing:'ownedClothing',shield:'ownedShields',accessory:'ownedAccessories'}[kind];
-  const choices=itemCatalog(kind).map((item,id)=>({item,id})).filter(({item,id})=>h[ownedField]?.[id]&&(!filter||(kind==='clothing'?item.slot===filter:(filter==='neck'?/^(Halskette|Talisman|Amulett)/i:/^Ring /i).test(item.name||item[0])))&&(kind!=='weapon'||(item[1]<=allowedWeaponLevel(h)&&(!isStaff(id)||h.role==='Magier')))&&(kind!=='armor'||item[1]<=h.xpLevel)&&(kind!=='clothing'&&kind!=='shield'||item.level<=h.xpLevel));
+  const choices=itemCatalog(kind).map((item,id)=>({item,id})).filter(({item,id})=>h[ownedField]?.[id]&&(!filter||(kind==='clothing'?item.slot===filter:(filter==='neck'?/^(Halskette|Talisman|Amulett)/i:filter==='ear'?/^(Ohrring|Piercing)/i:/^Ring /i).test(item.name||item[0])))&&(kind!=='weapon'||(item[1]<=allowedWeaponLevel(h)&&(!isStaff(id)||h.role==='Magier')))&&(kind!=='armor'||item[1]<=h.xpLevel)&&(kind!=='clothing'&&kind!=='shield'||item.level<=h.xpLevel));
   const selected=value>=0&&h[ownedField]?.[value]?value:-1;
   const isExtra=slot==='shield'&&(!weaponIsOneHanded(h.weaponId)||!h.ownedWeapons?.[h.weaponId]);
   return `<div class="alr-paper-slot alr-paper-${slot}"><span class="alr-paper-label">${label}</span><div class="alr-paper-image">${selected>=0?itemThumb(kind,selected):'<span class="alr-paper-empty">✦<small>Leer</small></span>'}</div><span class="alr-paper-name">${selected>=0?esc(itemName(kind,selected)):'Nicht angelegt'}</span>${editable?`<select data-paper-slot="${slot}" data-index="${i}" aria-label="${label} anlegen"><option value="-1">– Ablegen –</option>${choices.map(({id})=>`<option value="${id}" ${id===selected?'selected':''}>${esc(itemName(kind,id))}${kind==='weapon'?' · '+weaponGrip(id):''}</option>`).join('')}</select>`:''}${isExtra?'<small class="alr-paper-warning">Schild nur mit EHW</small>':''}</div>`;
  };
  const lookup=Object.fromEntries(slots.map(x=>[x[0],slotHTML(x)]));
- return `<details class="sheet-fold alr-equipment-sheet" data-equipment-fold="${i}"><summary>🛡️ Ausrüstung – Charakteransicht (auf-/zuklappen)</summary><div class="alr-paper-context"><b>${esc(h.name)}</b> · ${esc(h.role)} · Stufe ${h.xpLevel} · <b>RS ${equipmentRS(h)}</b></div><div class="alr-paper-grid"><div class="alr-paper-side">${lookup.weapon}${lookup.gloves}${lookup.ringLeft}</div><div class="alr-paper-middle">${lookup.helmet}<div class="alr-paper-character">${paperdollFigure(h)}</div>${lookup.armor}</div><div class="alr-paper-side">${lookup.neck}${lookup.shield}${lookup.boots}${lookup.ringRight}</div></div><p class="alr-paper-rules"><b>EHW</b> = Einhandwaffe · <b>ZHW</b> = Zweihandwaffe · Schild nur mit ausgerüsteter EHW · Magierstäbe immer ZHW. Angelegte Teile bleiben beim Charakter.</p></details>`;
+ return `<details class="sheet-fold alr-equipment-sheet" data-equipment-fold="${i}"><summary>🛡️ Ausrüstung</summary><div class="alr-paper-context"><b>${esc(h.name)}</b> · ${esc(h.role)} · Stufe ${h.xpLevel} · <b>RS ${equipmentRS(h)}</b></div><div class="alr-paper-grid"><div class="alr-paper-side">${lookup.weapon}${lookup.gloves}${lookup.ringLeft}${lookup.earLeft}</div><div class="alr-paper-middle">${lookup.helmet}<div class="alr-paper-character">${paperdollFigure(h)}</div>${lookup.armor}</div><div class="alr-paper-side">${lookup.neck}${lookup.shield}${lookup.boots}${lookup.ringRight}${lookup.earRight}</div></div><p class="alr-paper-rules"><b>EHW</b> = Einhandwaffe · <b>ZHW</b> = Zweihandwaffe · Schild nur mit ausgerüsteter EHW · Magierstäbe immer ZHW. Für Ohrringe und Piercings stehen zusammen genau <b>zwei Plätze</b> zur Verfügung. Angelegte Teile bleiben beim Charakter.</p></details>`;
 }
 async function saveClothingEquip(i,slot,id){try{if(!['head','boots','gloves'].includes(slot))throw Error('Unbekannter Platz.');const h=normalized(room?.heroes?.[i]||{});if(!canManage(room?.heroes?.[i]))throw Error('Keine Berechtigung.');if(id!==-1&&(!Number.isInteger(id)||!clothing[id]||clothing[id].slot!==slot||!h.ownedClothing?.[id]||clothing[id].level>h.xpLevel))throw Error('Kleidung nicht vorhanden oder Stufe zu niedrig.');await set(ref(db,`rooms/${roomKey}/heroes/${i}/equippedClothing/${slot}`),id);}catch(e){alert('Kleidung anlegen: '+e.message);render();}}
 async function saveShieldEquip(i,id){try{const h=normalized(room?.heroes?.[i]||{});if(!canManage(room?.heroes?.[i]))throw Error('Keine Berechtigung.');if(id!==-1){if(!Number.isInteger(id)||!shields[id]||!h.ownedShields?.[id]||shields[id].level>h.xpLevel)throw Error('Schild nicht gekauft oder Stufe zu niedrig.');if(!weaponIsOneHanded(h.weaponId)||!h.ownedWeapons?.[h.weaponId])throw Error('Schild darf nur zusammen mit einer ausgerüsteten Einhandwaffe getragen werden.');}await set(ref(db,`rooms/${roomKey}/heroes/${i}/shieldId`),id);}catch(e){alert('Schild anlegen: '+e.message);render();}}
 async function savePaperAccessory(i,slot,id){try{const h=normalized(room?.heroes?.[i]||{});if(!canManage(room?.heroes?.[i]))throw Error('Keine Berechtigung.');if(!['left','right','neck'].includes(slot))throw Error('Unbekannter Schmuckplatz.');const options=accessoryPaperList(h,slot==='neck'?'neck':'ring');if(id!==-1&&(!options.some(x=>x.id===id)||!h.ownedAccessories?.[id]))throw Error('Schmuck nicht vorhanden.');const chosen=paperAccessorySlots(h),other=slot==='left'?'right':'left';if(id>=0&&slot!=='neck'&&chosen[other]===id)throw Error('Dieser Ring ist bereits an der anderen Hand angelegt.');const old=chosen[slot],changes={[`paperRings/${slot}`]:id};if(old>=0&&old!==id)changes[`equippedAccessories/${old}`]=null;if(id>=0)changes[`equippedAccessories/${id}`]=1;await update(ref(db,`rooms/${roomKey}/heroes/${i}`),changes);}catch(e){alert('Schmuck anlegen: '+e.message);render();}}
-function bindPaperSlots(root){root.querySelectorAll('[data-paper-slot]').forEach(select=>select.onchange=async()=>{const i=select.dataset.index,slot=select.dataset.paperSlot,id=Number(select.value);select.disabled=true;try{if(slot==='weapon'||slot==='armor')await saveEquip(i,slot==='weapon'?'weaponId':'armorId',id);else if(slot==='shield')await saveShieldEquip(i,id);else if(['gloves','helmet','boots'].includes(slot))await saveClothingEquip(i,slot==='helmet'?'head':slot,id);else await savePaperAccessory(i,slot==='ringLeft'?'left':slot==='ringRight'?'right':'neck',id);}finally{if(select.isConnected)select.disabled=false;}});}
-async function buyNewItem(i,kind,id){try{const raw=room?.heroes?.[i],h=normalized(raw||{}),list=itemCatalog(kind),item=list[id];if(!canManage(raw)||!['clothing','shield'].includes(kind)||!item||!Number.isInteger(id))throw Error('Ungültiger Kauf.');if(!merchantAllowed(kind,i))throw Error('Händler geschlossen.');if(h.xpLevel<item.level)throw Error('Mindeststufe nicht erreicht.');if(h.gold<item.price)throw Error('Nicht genügend Gold.');if(!confirm(`„${item.name}“ für ${item.price} Gold kaufen?\nStufe ${item.level} · RS +${item.rs}`))return;const f=kind==='clothing'?'ownedClothing':'ownedShields';const count=Number(h[f]?.[id])||0;if(count>=99)throw Error('Maximal 99 Stück.');await update(ref(db,`rooms/${roomKey}/heroes/${i}`),{gold:h.gold-item.price,[`${f}/${id}`]:count+1});}catch(e){alert('Kauf fehlgeschlagen: '+(e.message||e));}}
+async function saveEarAccessory(i,side,id){try{
+ const raw=room?.heroes?.[i],h=normalized(raw||{});
+ if(!canManage(raw))throw Error('Keine Berechtigung für diesen Charakter.');
+ if(!['left','right'].includes(side))throw Error('Unbekannter Ohrschmuckplatz.');
+ if(id!==-1&&(!Number.isInteger(id)||!isEarAccessory(id)||!h.ownedAccessories?.[id]))throw Error('Ohrring/Piercing nicht gekauft.');
+ const current=paperEarSlots(h),other=side==='left'?'right':'left';
+ if(id>=0&&current[other]===id)throw Error('Dieser Ohrschmuck ist bereits auf dem anderen Platz angelegt.');
+ if(id>=0&&current[side]<0&&Object.values(h.equippedAccessories||{}).filter(Boolean).length>=10)throw Error('Maximal zehn Schmuckstücke gleichzeitig.');
+ const changes={[`earSlots/${side}`]:id,[`earSlots/${other}`]:current[other]};
+ if(current[side]>=0&&current[side]!==id)changes[`equippedAccessories/${current[side]}`]=null;
+ if(id>=0)changes[`equippedAccessories/${id}`]=1;
+ await update(ref(db,`rooms/${roomKey}/heroes/${i}`),changes);
+ }catch(e){alert('Ohrring/Piercing anlegen: '+firebaseWriteHelp(e,i));render();}}
+function bindPaperSlots(root){root.querySelectorAll('[data-paper-slot]').forEach(select=>select.onchange=async()=>{const i=select.dataset.index,slot=select.dataset.paperSlot,id=Number(select.value);select.disabled=true;try{if(slot==='weapon'||slot==='armor')await saveEquip(i,slot==='weapon'?'weaponId':'armorId',id);else if(slot==='shield')await saveShieldEquip(i,id);else if(['gloves','helmet','boots'].includes(slot))await saveClothingEquip(i,slot==='helmet'?'head':slot,id);else if(slot==='earLeft'||slot==='earRight')await saveEarAccessory(i,slot==='earLeft'?'left':'right',id);else await savePaperAccessory(i,slot==='ringLeft'?'left':slot==='ringRight'?'right':'neck',id);}finally{if(select.isConnected)select.disabled=false;}});}
+function firebaseWriteHelp(error,i){
+ const msg=String(error?.message||error||'Unbekannter Fehler');
+ const code=String(error?.code||'');
+ if(!/permission.?denied|access denied|permission denied|zugriff verweigert/i.test(code+' '+msg))return msg;
+ const raw=room?.heroes?.[i];
+ const owner=raw?.owner===uid;
+ const hostAllowed=!!host;
+ const identity=owner?'Du bist als Besitzer des Charakters angemeldet.':hostAllowed?'Du bist als Spielmeister angemeldet.':'Die aktuelle Firebase-Anmeldung gehört nicht zum Besitzer dieses Charakters.';
+ return 'Firebase verweigert den Schreibzugriff (Permission denied). '+identity+'\nBitte in Firebase Console → Realtime Database → Regeln die geltenden RC-10.8-Regeln prüfen/veröffentlichen und kontrollieren, ob du mit derselben Firebase-Anmeldung im aktiven Charakter spielst. Die Datei index.html allein kann Datenbankrechte nicht freischalten.\nOriginalmeldung: '+msg;
+}
+async function buyNewItem(i,kind,id){try{const raw=room?.heroes?.[i],h=normalized(raw||{}),list=itemCatalog(kind),item=list[id];if(!canManage(raw)||!['clothing','shield'].includes(kind)||!item||!Number.isInteger(id))throw Error('Ungültiger Kauf.');if(!merchantAllowed(kind,i))throw Error('Händler geschlossen.');if(h.xpLevel<item.level)throw Error('Mindeststufe nicht erreicht.');if(h.gold<item.price)throw Error('Nicht genügend Gold.');if(!confirm(`„${item.name}“ für ${item.price} Gold kaufen?\nStufe ${item.level} · RS +${item.rs}`))return;const f=kind==='clothing'?'ownedClothing':'ownedShields';const count=Number(h[f]?.[id])||0;if(count>=99)throw Error('Maximal 99 Stück.');await update(ref(db,`rooms/${roomKey}/heroes/${i}`),{gold:h.gold-item.price,[`${f}/${id}`]:count+1});}catch(e){alert('Kauf fehlgeschlagen: '+firebaseWriteHelp(e,i));}}
 async function sellNewItem(i,kind,id){try{const raw=room?.heroes?.[i],h=normalized(raw||{}),item=itemCatalog(kind)[id],f=kind==='clothing'?'ownedClothing':'ownedShields',count=Number(h[f]?.[id])||0;if(!canManage(raw)||!item||!['clothing','shield'].includes(kind)||count<1)throw Error('Gegenstand nicht vorhanden.');const price=Math.floor(item.price*.75);if(!confirm(`„${item.name}“ für ${price} Gold verkaufen?`))return;const changes={gold:Math.min(999999,h.gold+price),[`${f}/${id}`]:count>1?count-1:null};if(count===1){if(kind==='shield'&&Number(h.shieldId)===id)changes.shieldId=-1;if(kind==='clothing'&&Number(h.equippedClothing?.[item.slot])===id)changes[`equippedClothing/${item.slot}`]=-1;}await update(ref(db,`rooms/${roomKey}/heroes/${i}`),changes);}catch(e){alert('Verkauf fehlgeschlagen: '+(e.message||e));}}
 
 const sortedWeaponIds=()=>weapons.map((_,i)=>i).sort((a,b)=>Number(weaponIsRanged(a))-Number(weaponIsRanged(b))||weapons[a][1]-weapons[b][1]||weaponPrices[a]-weaponPrices[b]||weapons[a][0].localeCompare(weapons[b][0],'de'));
@@ -1522,11 +1562,11 @@ function sheetMarkup(h,i){
  ['Ausrüstung','accessory',accessories,accessories.map(x=>x[1]),Object.keys(h.ownedAccessories||{}).filter(k=>h.ownedAccessories[k]&&accessories[k]),id=>h.equippedAccessories?.[id]?'Angelegt':'',id=>`${({mr:'MR',mw:'MW',ini:'INI',fk:'FK',attack:'AT',parry:'PA',staerke:'ST',geschicklichkeit:'GE',intelligenz:'IN',willenskraft:'WI',charisma:'CH'})[accessories[id][2]]} +${accessories[id][3]}`]
  ];
  const belongings=groups.map(([label,kind,items,prices,ids,status,detail])=>`<h4>${label}</h4><div style="overflow-x:auto"><table class="matrix-table"><thead><tr><th>Gegenstand</th><th>Werte</th><th>Status / Anlegen</th><th>Verkauf (75 %)</th></tr></thead><tbody>${ids.map(id=>`<tr><td>${shopItemDisplay(kind,id)} ${kind==='weapon'||kind==='armor'?`<small style="color:${Number(items[id][1])<=Number(h.xpLevel||0)+(kind==='weapon'&&h.role==='Krieger'?1:0)?'#4bd783':'#ff7777'}">· Stufe ${items[id][1]} · ${Number(items[id][1])<=Number(h.xpLevel||0)+(kind==='weapon'&&h.role==='Krieger'?1:0)?'tragbar':'nicht tragbar'}</small>`:''}</td><td>${esc(detail(id))}</td><td>${esc(status(id))} ${canSell&&kind!=='potion'?`<button data-sheet-equip="${kind}" data-id="${id}" data-index="${i}">${kind==='accessory'?(h.equippedAccessories?.[id]?'Ablegen':'Anlegen'):(kind==='clothing'?Number(h.equippedClothing?.[clothing[id].slot])===Number(id):kind==='shield'?Number(h.shieldId)===Number(id):kind==='weapon'?Number(h.weaponId)===Number(id):Number(h.armorId)===Number(id))?'Ablegen':'Anlegen'}</button>`:''}</td><td>${canSell?`<button data-sheet-sell="${kind}" data-id="${id}" data-index="${i}">Verkaufen · ${Math.floor(prices[id]*.75)} G</button>`:`${Math.floor(prices[id]*.75)} G`}</td></tr>`).join('')||'<tr><td colspan="4">Keine Gegenstände</td></tr>'}</tbody></table></div>`).join('');
- return `<h2>📜 ${esc(h.name)}</h2><p class="w6-value-legend"><span class="w6-magic-value">✦ Purpur: Zauber</span> · <span class="w6-potion-value">● Grün: Trankwirkung</span></p>${paperdollMarkup(h,i)}<details class="sheet-fold"><summary>👤 Charakterdaten</summary>${basic}</details><details class="sheet-fold"><summary>🎯 Talente</summary>${talent}</details><details class="sheet-fold"><summary>⚔️ Kampfwerte und Magie</summary>${derivedTable}</details><details class="sheet-fold"><summary>🧭 Fertigkeiten</summary>${skillsTable(h)}</details><details class="sheet-fold"><summary>⭐ Stufenabhängige Sonderfähigkeiten</summary>${abilitiesTable(h,i)}</details><details class="sheet-fold"><summary>✨ Zauber und Tränke</summary>${spellsAndPotions}</details>
+ return `<h2>📜 ${esc(h.name)}</h2><p class="w6-value-legend"><span class="w6-magic-value">✦ Purpur: Zauber</span> · <span class="w6-potion-value">● Grün: Trankwirkung</span></p><details class="sheet-fold"><summary>👤 Charakterdaten</summary>${basic}</details><details class="sheet-fold"><summary>🎯 Talente</summary>${talent}</details><details class="sheet-fold"><summary>⚔️ Kampfwerte und Magie</summary>${derivedTable}</details><details class="sheet-fold"><summary>🧭 Fertigkeiten</summary>${skillsTable(h)}</details>${paperdollMarkup(h,i)}<details class="sheet-fold"><summary>✨ Zauber und Tränke</summary>${spellsAndPotions}</details><details class="sheet-fold"><summary>⭐ Stufenabhängige Sonderfähigkeiten</summary>${abilitiesTable(h,i)}</details>
  <p><b>Aktuelle Waffe:</b> ${esc(weaponOf(h)[0])} · <b>Aktuelle Rüstung:</b> ${esc(armorOf(h)[0])}</p>
- <h3>🎒 Inventar</h3><div class="alr-sheet-inventory-editor alr-sheet-note-editor"><p class="muted">Freitextinventar für Spieler und Meister. Gekaufte Waffen, Rüstungen und Tränke bleiben wie bisher unter „Besitz und Verkauf“ verwaltet.</p><textarea data-sheet-inventory="${i}" maxlength="1500" rows="5" placeholder="Gegenstände und Ausrüstung notieren …">${esc(inventoryDrafts.get(String(i))?.text??h.inventory??'')}</textarea><div class="row"><button class="primary" data-save-sheet-inventory="${i}" type="button">💾 Inventar speichern</button><span class="muted" data-inventory-status="${i}">${inventoryDrafts.has(String(i))?'Noch nicht gespeichert':'Bis zu 1500 Zeichen'}</span></div></div>
- <h3>📝 Notizen</h3><div class="alr-sheet-note-editor"><p class="muted">Freie Notizen für Spieler und Meister – nach dem Speichern live synchronisiert.</p><textarea data-sheet-notes="${i}" maxlength="1500" rows="5" placeholder="Hier deine Notizen zum Abenteuer eintragen …">${esc(noteDrafts.get(String(i))?.text??h.notes??'')}</textarea><div class="row"><button class="primary" data-save-sheet-notes="${i}" type="button">💾 Notizen speichern</button><span class="muted" data-notes-status="${i}">${noteDrafts.has(String(i))?'Noch nicht gespeichert':'Bis zu 1500 Zeichen'}</span></div></div>
- <hr><details class="sheet-fold"><summary>🪙 Besitz und Verkauf · ${h.gold} Gold</summary><p class="muted">Verkauf für 75 % des Einkaufspreises, auf ganze Goldstücke abgerundet. Jede Transaktion wird vorher bestätigt.</p>${belongings}</details>`;
+ <details class="sheet-fold"><summary>🎒 Inventar</summary><div class="alr-sheet-inventory-editor alr-sheet-note-editor"><p class="muted">Freitextinventar für Spieler und Meister. Gekaufte Waffen, Rüstungen und Tränke bleiben wie bisher unter „Besitz und Verkauf“ verwaltet.</p><textarea data-sheet-inventory="${i}" maxlength="1500" rows="5" placeholder="Gegenstände und Ausrüstung notieren …">${esc(inventoryDrafts.get(String(i))?.text??h.inventory??'')}</textarea><div class="row"><button class="primary" data-save-sheet-inventory="${i}" type="button">💾 Inventar speichern</button><span class="muted" data-inventory-status="${i}">${inventoryDrafts.has(String(i))?'Noch nicht gespeichert':'Bis zu 1500 Zeichen'}</span></div></div></details>
+ <details class="sheet-fold"><summary>📝 Notizen</summary><div class="alr-sheet-note-editor"><p class="muted">Freie Notizen für Spieler und Meister – nach dem Speichern live synchronisiert.</p><textarea data-sheet-notes="${i}" maxlength="1500" rows="5" placeholder="Hier deine Notizen zum Abenteuer eintragen …">${esc(noteDrafts.get(String(i))?.text??h.notes??'')}</textarea><div class="row"><button class="primary" data-save-sheet-notes="${i}" type="button">💾 Notizen speichern</button><span class="muted" data-notes-status="${i}">${noteDrafts.has(String(i))?'Noch nicht gespeichert':'Bis zu 1500 Zeichen'}</span></div></div></details>
+ <details class="sheet-fold"><summary>🪙 Besitz und Verkauf · ${h.gold} Gold</summary><p class="muted">Verkauf für 75 % des Einkaufspreises, auf ganze Goldstücke abgerundet. Jede Transaktion wird vorher bestätigt.</p>${belongings}</details>`;
 }
 function bindSheetSales(root){
  bindPaperSlots(root);
@@ -1680,7 +1720,7 @@ function shop108Descriptor(kind,id){
  if(kind==='armor')Object.assign(h,{level:x[1],price:armorPrices[id],details:`RS ${x[2]}${armorMr(id)?` · MR +${armorMr(id)}`:''}`,ownedField:'ownedArmors',category:'Rüstungen'});
  if(kind==='shield')Object.assign(h,{level:x.level,price:x.price,details:`RS +${x.rs} · EHW zum Anlegen erforderlich`,ownedField:'ownedShields',category:'Schilde'});
  if(kind==='clothing')Object.assign(h,{level:x.level,price:x.price,details:`RS +${x.rs}`,ownedField:'ownedClothing',category:({head:'Kopfbedeckungen',boots:'Stiefel',gloves:'Handschuhe'})[x.slot]||'Kleidung'});
- if(kind==='accessory')Object.assign(h,{price:x[1],details:`${SHOP108_BONUS[x[2]]||x[2]} +${x[3]}`,ownedField:'ownedAccessories',qtyMax:1,category:/^Ring /i.test(x[0])?'Ringe':/^(Amulett|Halskette|Talisman)/i.test(x[0])?'Amulette & Ketten':'Runen & Zubehör'});
+ if(kind==='accessory')Object.assign(h,{price:x[1],details:`${SHOP108_BONUS[x[2]]||x[2]} +${x[3]}`,ownedField:'ownedAccessories',qtyMax:1,category:/^Ring /i.test(x[0])?'Ringe':/^(Ohrring|Piercing)/i.test(x[0])?'Ohrringe & Piercings':/^(Amulett|Halskette|Talisman)/i.test(x[0])?'Amulette & Ketten':'Runen & Zubehör'});
  if(kind==='potion')Object.assign(h,{price:x.price,details:x.desc,ownedField:'potions',category:'Tränke'});
  return h;
 }
@@ -1710,7 +1750,7 @@ function shop108Rows(kind,i,h,readOnly){
   const equipped=!readOnly&&qty>0&&shop108Equipped(spec,h);
   const btn=(action,label,disabled=false,title='')=>`<button type="button" class="alr108-action ${action==='buy'?'primary':''}" data-shop108-action="${action}" data-kind="${kind}" data-id="${spec.id}" data-slot="${i}" ${disabled?'disabled':''} ${title?`title="${esc(title)}"`:''}>${label}</button>`;
   const canEquip=qty>0&&kind!=='potion';
-  const equipReason=!readOnly&&kind==='shield'&&!equipped&&(!weaponIsOneHanded(h.weaponId)||!h.ownedWeapons?.[h.weaponId])?'EHW anlegen':null;
+  const equipReason=readOnly?null:kind==='shield'&&!equipped&&(!weaponIsOneHanded(h.weaponId)||!h.ownedWeapons?.[h.weaponId])?'EHW anlegen':kind==='accessory'&&isEarAccessory(spec.id)&&!equipped&&Object.values(paperEarSlots(h)).filter(id=>id>=0).length>=2?'Beide Ohrschmuckplätze belegt – im Charakterbogen wechseln':null;
   const buttons=readOnly?'<span class="muted">Meisterübersicht</span>':`<div class="alr108-actions">
    ${btn('buy','Kaufen',!!reason,reason)}
    ${canEquip?btn('equip',equipped?'Ablegen':'Anlegen',!!equipReason,equipReason||''):''}
@@ -1988,7 +2028,7 @@ async function buy(i,kind,id){try{
  changes[`${field}/${id}`]=(h[field]?.[id]===true?1:(Number(h[field]?.[id])||0))+1;
  await update(ref(db,`rooms/${roomKey}/heroes/${i}`),changes);
  alert(`${list[id].name||list[id][0]} gekauft! ${price} Gold abgezogen.`);
- }catch(e){alert('Kauf fehlgeschlagen ('+kind+', Artikel '+id+'): '+(e.message||e)+'\nPrüfe die in RC 10.8 enthaltenen Firebase-Regeln, den Händlerstatus und die Gold-/Besitzrechte.');}}
+ }catch(e){alert('Kauf fehlgeschlagen ('+kind+', Artikel '+id+'): '+firebaseWriteHelp(e,i));}}
 async function sell(i,kind,id){try{
  const raw=room.heroes?.[i];if(!canManage(raw))throw Error('Keine Berechtigung.');
  const h=normalized(raw),field=kind==='weapon'?'ownedWeapons':kind==='armor'?'ownedArmors':kind==='accessory'?'ownedAccessories':'potions';
@@ -1999,7 +2039,11 @@ async function sell(i,kind,id){try{
  const amount=Math.floor(prices[id]*.75);
  if(!confirm(`„${list[id].name||list[id][0]}“ für ${amount} Gold (75 % des Einkaufspreises, abgerundet) verkaufen?`))return;
  const changes={gold:Math.min(999999,h.gold+amount)};
- changes[`${field}/${id}`]=count>1?count-1:null;if(kind==='accessory'&&h.equippedAccessories?.[id])changes[`equippedAccessories/${id}`]=null;
+ changes[`${field}/${id}`]=count>1?count-1:null;if(kind==='accessory'){
+   if(h.equippedAccessories?.[id])changes[`equippedAccessories/${id}`]=null;
+   for(const [place,earId] of Object.entries(h.earSlots||{}))if(Number(earId)===id)changes[`earSlots/${place}`]=-1;
+   for(const [place,paperId] of Object.entries(h.paperRings||{}))if(Number(paperId)===id)changes[`paperRings/${place}`]=-1;
+  }
  if(kind==='weapon'&&Number(h.weaponId)===id&&count<=1){changes.weaponId=-1;changes.shieldId=-1;}
  if(kind==='armor'&&Number(h.armorId)===id&&count<=1)changes.armorId=-1;
  await update(ref(db,`rooms/${roomKey}/heroes/${i}`),changes);
@@ -2009,9 +2053,25 @@ async function toggleAccessory(i,id){try{
  const raw=room.heroes?.[i];if(!canManage(raw))throw Error('Keine Berechtigung.');
  const h=normalized(raw);if(!h.ownedAccessories?.[id]||!accessories[id])throw Error('Ausrüstung nicht vorhanden.');
  const active=!!h.equippedAccessories?.[id];
+ if(isEarAccessory(id)){
+  const current=paperEarSlots(h),changes={};
+  if(active){
+   changes[`equippedAccessories/${id}`]=null;
+   for(const side of ['left','right'])changes[`earSlots/${side}`]=current[side]===id?-1:current[side];
+  }else{
+   const side=current.left<0?'left':current.right<0?'right':null;
+   if(!side)throw Error('Beide Ohrschmuckplätze sind belegt. Lege zuerst einen Ohrring/ein Piercing ab.');
+   if(Object.values(h.equippedAccessories||{}).filter(Boolean).length>=10)throw Error('Maximal zehn Schmuckstücke gleichzeitig.');
+   changes[`earSlots/${side}`]=id;
+   changes[`earSlots/${side==='left'?'right':'left'}`]=current[side==='left'?'right':'left'];
+   changes[`equippedAccessories/${id}`]=1;
+  }
+  await update(ref(db,`rooms/${roomKey}/heroes/${i}`),changes);
+  return;
+ }
  if(!active&&Object.values(h.equippedAccessories||{}).filter(Boolean).length>=10)throw Error('Maximal zehn Ausrüstungsteile gleichzeitig.');
  await set(ref(db,`rooms/${roomKey}/heroes/${i}/equippedAccessories/${id}`),active?null:1);
- }catch(e){alert('Ausrüstung: '+(e.message||e));}}
+ }catch(e){alert('Ausrüstung: '+firebaseWriteHelp(e,i));}}
 async function drink(i,id){try{
  const raw=room.heroes?.[i];if(!canManage(raw))throw Error('Keine Berechtigung.');
  const p=potions[id];if(!p)throw Error('Ungültiger Trank.');
