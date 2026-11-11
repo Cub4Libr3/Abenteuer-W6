@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alearis RC 10.8 · Gezielter Spieler-Kaufschreibtest</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{max-width:880px;margin:0 auto;padding:20px 15px 50px;background:#111923;color:#ecedf3;font:16px/1.55 system-ui,sans-serif}h1{font-size:1.55rem;color:#f0ca84}h2{font-size:1.12rem;color:#edcf97}section{border:1px solid #455263;background:#1b2938;border-radius:11px;padding:15px;margin:16px 0}button,input,select{font:inherit;padding:11px;border:1px solid #9ca7b3;border-radius:7px;max-width:100%}button{background:#ebc887;color:#211909;cursor:pointer;font-weight:700}button:disabled{opacity:.5;cursor:wait}input,select{background:#f0eff0;color:#18202c}input{width:min(420px,100%)}label{display:block;margin:12px 0 4px}p{margin:.7em 0}.warning{border-left:4px solid #f4b454;padding:8px 12px;background:#3b2e22}.ok{color:#89e5b0}.bad{color:#ffa2a2}.muted,small{color:#c8d2de}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#090f17;border:1px solid #4a586e;border-radius:6px;padding:13px;min-height:100px;font:13px/1.5 ui-monospace,monospace}button.danger{background:#f2b0a5;color:#402016}.buttons{display:flex;gap:10px;flex-wrap:wrap}a{color:#b1daff}
+</style>
+</head>
+<body>
+<h1>Alearis RC 10.8 · Spieler-Kaufschreibtest</h1>
+<p>Dies ist eine <strong>gezielte Diagnose</strong> für den Fehler <code>PERMISSION_DENIED</code> beim Kauf durch einen <strong>normalen Spieler</strong>. Sie verwendet dieselbe Firebase-Konfiguration wie das Spiel.</p>
+<p class="warning"><strong>Achtung: echter Live-Schreibtest!</strong> Im Gegensatz zum bisherigen No-op-Test werden kurzzeitig echte Werte verändert und anschließend wiederhergestellt. Für den Test der <strong>Beschlagenen Marschstiefel (ID 11, 105 Gold)</strong> werden im Erfolgsfall 105 Gold abgezogen und ein Stiefelpaar zum Besitz addiert; beides wird unmittelbar zurückgesetzt. Falls die Wiederherstellung misslingt, bleibt eine Sicherung im Browser und eine gut sichtbare Warnung stehen. Währenddessen bitte mit diesem Charakter keine anderen Aktionen durchführen.</p>
+<section>
+<h2>1 · Datenbank und eigenen Charakter prüfen</h2>
+<p id="domain"></p>
+<label for="roomInput">Spielraum (wird wie beim bisherigen Test automatisch ermittelt)</label>
+<input id="roomInput" maxlength="36" placeholder="Spielraum-Key (36 Zeichen)">
+<div class="buttons" style="margin-top:12px"><button id="connectBtn">Verbindung prüfen</button><button id="recoverBtn" class="danger" disabled>Sicherung wiederherstellen</button></div>
+<label for="charSelect">Charakter</label>
+<select id="charSelect" disabled><option>Erst verbinden</option></select>
+<p id="state" class="muted">Noch nicht verbunden.</p>
+</section>
+<section>
+<h2>2 · Echten Kauf-Schreibvorgang prüfen</h2>
+<p>Der Test versucht zunächst die <strong>exakte gemeinsame Aktualisierung</strong> von Gold und <code>ownedClothing/11</code>. Wird sie abgelehnt, prüft er beide Schreibpfade einzeln. Jeden erfolgreichen Schritt setzt er sofort zurück; bei Wiederherstellungsproblemen stoppt er.</p>
+<div class="buttons"><button id="runBtn" disabled>Gezielten Test starten</button><button id="copyBtn" disabled>Ergebnis kopieren</button></div>
+<pre id="log">Noch kein Testergebnis.</pre>
+</section>
+<p><small>Nur als betroffener Spieler mit dem eigenen Charakter verwenden. Die vollständige Benutzer-ID, der Raum-Key, die Firebase-Konfiguration und die Charakterdaten werden nicht ins Protokoll geschrieben oder versendet. Die Browser-Sicherung wird entfernt, sobald alle Werte wiederhergestellt sind. Keine Änderung an index.html oder Firebase-Regeln erforderlich, abgesehen vom Hochladen dieser separaten Testdatei.</small></p>
+<script type="module">
+const $=id=>document.getElementById(id);
+const BACKUP_KEY='alearis_rc108_purchase_write_test_backup';
+const PRICE=105, ITEM_ID=11;
+let fb=null,db=null,auth=null,user=null,room=null,roomKey='',selectedSlot='',active=false;
+const lines=[];
+function log(s){lines.push(s);$('log').textContent=lines.join('\n');$('copyBtn').disabled=false;}
+function errText(e){return String(e?.code||'unbekannt')+': '+String(e?.message||e||'').replace(/https?:\/\/\S+/g,'[URL]');}
+function short(x){return x?String(x).slice(0,6)+'…':'—';}
+function ownedValue(v){return v==null?null:v;}
+function readBackup(){try{return JSON.parse(localStorage.getItem(BACKUP_KEY)||'null');}catch{return null;}}
+function saveBackup(x){localStorage.setItem(BACKUP_KEY,JSON.stringify(x));$('recoverBtn').disabled=false;}
+function clearBackup(){localStorage.removeItem(BACKUP_KEY);$('recoverBtn').disabled=true;}
+function controls(busy){active=busy;$('connectBtn').disabled=busy;$('runBtn').disabled=busy||!db||!selectedSlot||!!readBackup();$('charSelect').disabled=busy||!room;$('recoverBtn').disabled=busy||!readBackup();}
+function heroRef(){return fb.d.ref(db,'rooms/'+roomKey+'/heroes/'+selectedSlot);}
+function goldVal(h){return h?.gold;}
+function itemVal(h){return ownedValue(h?.ownedClothing?.[ITEM_ID]);}
+function equal(a,b){return a===b;}
+function myHero(h){return !!user&&h?.owner===user.uid&&room?.hostUid!==user.uid;}
+$('domain').textContent=location.origin+(location.hostname.toLowerCase()==='cub4libr3.github.io'?' · korrekte Live-Domain':' · FALSCHE DOMAIN');
+$('roomInput').value=new URLSearchParams(location.search).get('room')||'';
+async function modules(){if(fb)return;try{const b='https://www.gstatic.com/firebasejs/10.14.1/';const [a,u,d]=await Promise.all([import(b+'firebase-app.js'),import(b+'firebase-auth.js'),import(b+'firebase-database.js')]);fb={a,u,d};}catch(e){const b='https://esm.sh/firebase@10.14.1/';const [a,u,d]=await Promise.all([import(b+'app'),import(b+'auth'),import(b+'database')]);fb={a,u,d};}}
+async function connect(){controls(true);try{
+  if(location.hostname.toLowerCase()!=='cub4libr3.github.io')throw Error('Nur auf der GitHub-Pages-Adresse des Spiels ausführen.');
+  const raw=localStorage.getItem('w6-firebase-config');if(!raw)throw Error('Firebase-Konfiguration fehlt. Erst Alearis im selben Browser öffnen.');
+  const cfg=JSON.parse(raw);if(!cfg.apiKey||!cfg.appId||!cfg.projectId||!cfg.databaseURL)throw Error('Firebase-Konfiguration unvollständig.');
+  await modules();const app=fb.a.initializeApp(cfg);auth=fb.u.getAuth(app);db=fb.d.getDatabase(app);
+  await new Promise((res,rej)=>{const timeout=setTimeout(()=>rej(Error('Firebase-Anmeldung timeout')),15000);const off=fb.u.onAuthStateChanged(auth,()=>{clearTimeout(timeout);off();res();},e=>{clearTimeout(timeout);rej(e);});});
+  user=auth.currentUser;if(!user)throw Error('Nicht angemeldet. Zuerst Alearis öffnen und Charakter betreten.');
+  const entered=$('roomInput').value.trim();roomKey=entered||(await fb.d.get(fb.d.ref(db,'activeSession'))).val()?.roomKey||'';
+  if(!/^[a-f0-9]{36}$/.test(roomKey))throw Error('Ungültiger Raum-Key. Bitte aus der Spiel-URL übernehmen.');
+  $('roomInput').value=roomKey;
+  const snap=await fb.d.get(fb.d.ref(db,'rooms/'+roomKey));room=snap.val();if(!room)throw Error('Raum nicht gefunden.');
+  const sel=$('charSelect');sel.replaceChildren();const mine=Object.entries(room.heroes||{}).filter(([s,h])=>h?.owner===user.uid);
+  if(!mine.length)throw Error('Kein eigener Charakter unter dieser Firebase-Anmeldung gefunden. Als betroffener Spieler anmelden.');
+  if(room.hostUid===user.uid)throw Error('Diese Diagnose muss ein Spieler ausführen, nicht der Spielmeister.');
+  mine.forEach(([s,h])=>{const op=document.createElement('option');op.value=s;op.textContent='Eigener Charakter · Platz '+s;sel.appendChild(op);});
+  selectedSlot=mine[0][0];sel.value=selectedSlot;
+  const h=(await fb.d.get(heroRef())).val();
+  $('state').textContent='Spieler UID '+short(user.uid)+' · Raum '+short(roomKey)+' · DB '+new URL(cfg.databaseURL).host+' · Platz '+selectedSlot+' · Gold '+goldVal(h)+' · ownedClothing/11: '+(itemVal(h)??'nicht vorhanden');
+  log('VERBINDUNG: Spieler/Charakterbesitzer · Gold '+goldVal(h)+' · Stiefelmenge '+(itemVal(h)??'fehlt'));
+}catch(e){$('state').textContent='Verbindung fehlgeschlagen: '+errText(e);db=null;selectedSlot='';}finally{controls(false);}}
+$('connectBtn').addEventListener('click',connect);
+$('charSelect').addEventListener('change',async()=>{selectedSlot=$('charSelect').value;const h=(await fb.d.get(heroRef())).val();$('state').textContent='Eigener Charakter · Gold '+goldVal(h)+' · ownedClothing/11 '+(itemVal(h)??'nicht vorhanden');controls(false);});
+async function restore(){const back=readBackup();if(!back)return true;
+  if(!db||!user||!roomKey||back.roomKey!==roomKey||back.slot!==selectedSlot||back.owner!==user.uid){log('❗ WIEDERHERSTELLUNG AUSSTEHEND: Bitte mit derselben Firebase-Anmeldung, demselben Raum und Charakter verbinden.');return false;}
+  const cur=(await fb.d.get(heroRef())).val();
+  const safeChanges={};
+  if(back.goldWritten){if(equal(goldVal(cur),back.expectedGold))safeChanges.gold=back.beforeGold;else if(!equal(goldVal(cur),back.beforeGold)){log('❗ Gold wurde zwischenzeitlich anders verändert. Zur Sicherheit kein Überschreiben. Bitte manuell klären.');return false;}}
+  if(back.itemWritten){if(equal(itemVal(cur),back.expectedItem))safeChanges['ownedClothing/'+ITEM_ID]=back.beforeItem;else if(!equal(itemVal(cur),back.beforeItem)){log('❗ Stiefelbestand wurde zwischenzeitlich anders verändert. Zur Sicherheit kein Überschreiben. Bitte manuell klären.');return false;}}
+  if(Object.keys(safeChanges).length){
+    try{await fb.d.update(heroRef(),safeChanges);}catch(e){log('Wiederherstellung über kombinierten Aufruf abgewiesen: '+errText(e)+'; versuche einzelne Felder.');
+      for(const [key,val] of Object.entries(safeChanges))try{await fb.d.set(fb.d.ref(db,'rooms/'+roomKey+'/heroes/'+selectedSlot+'/'+key),val);}catch(e2){log('❗ Einzelwiederherstellung '+key+' fehlgeschlagen: '+errText(e2));}}
+  }
+  const after=(await fb.d.get(heroRef())).val();
+  if(equal(goldVal(after),back.beforeGold)&&equal(itemVal(after),back.beforeItem)){
+    log('✅ VOLLSTÄNDIG WIEDERHERGESTELLT: Gold '+back.beforeGold+', Stiefelmenge '+(back.beforeItem??'nicht vorhanden'));
+    clearBackup();return true;
+  }
+  log('❗ WICHTIG: NICHT VOLLSTÄNDIG WIEDERHERGESTELLT! Sicherung bleibt im Browser. Vor weiteren Spielaktionen erst manuell klären.');return false;
+}
+$('recoverBtn').addEventListener('click',async()=>{controls(true);try{await restore();}catch(e){log('❗ Wiederherstellung fehlgeschlagen: '+errText(e));}finally{controls(false);}});
+async function probe(label,mode){
+  const before=(await fb.d.get(heroRef())).val();if(!myHero(before))throw Error('Nicht der Charakterbesitzer.');
+  const beforeGold=goldVal(before),beforeItem=itemVal(before);
+  if(!Number.isInteger(beforeGold)||beforeGold<PRICE)throw Error('Ungültiger Goldstand oder weniger als '+PRICE+' Gold.');
+  const n=beforeItem==null?0:Number(beforeItem);if(!Number.isInteger(n)||n<0||n>=99)throw Error('Ungültiger Stiefelbestand (0 bis 98 erforderlich).');
+  const newGold=beforeGold-(mode==='item'?0:PRICE),newItem=n+(mode==='gold'?0:1);
+  const changes=mode==='both'?{gold:newGold,['ownedClothing/'+ITEM_ID]:newItem}:mode==='gold'?{gold:newGold}:{['ownedClothing/'+ITEM_ID]:newItem};
+  const backup={roomKey,slot:selectedSlot,owner:user.uid,beforeGold,beforeItem,expectedGold:newGold,expectedItem:mode==='gold'?beforeItem:newItem,goldWritten:mode!=='item',itemWritten:mode!=='gold'};
+  saveBackup(backup);log('PRÜFUNG '+label+': Versuch der tatsächlichen Werteänderung ...');
+  let accepted=false;
+  try{await fb.d.update(heroRef(),changes);accepted=true;log('✅ '+label+': Schreibvorgang ERLAUBT');}
+  catch(e){log('❌ '+label+': '+errText(e));}
+  const restored=await restore();if(!restored)throw Error('Wiederherstellung ausstehend. Bitte nicht weiter testen.');
+  return accepted;
+}
+$('runBtn').addEventListener('click',async()=>{
+  if(active||!db||!selectedSlot||readBackup())return;
+  if(!confirm('Achtung: Es erfolgen echte, kurzzeitige Datenbankänderungen am eigenen Charakter (Gold und/oder Stiefelmenge). Nach jedem Versuch wird sofort zurückgeschrieben. Bitte bestätige nur, wenn du den Test jetzt bewusst ausführen möchtest und niemand gleichzeitig an diesem Charakter arbeitet.'))return;
+  controls(true);lines.length=0;$('log').textContent='';
+  log('ALEARIS RC 10.8 · ECHTER SPIELER-KAUFSCHREIBTEST');log('Domain: '+location.hostname+' · Raum '+short(roomKey)+' · UID '+short(user.uid));log('Artikel: Beschlagene Marschstiefel · ID 11 · 105 Gold');
+  try{
+    const combined=await probe('KOMBINIERT: Gold –105 und Stiefel +1','both');
+    if(combined)log('ERGEBNIS: Exakte Kaufaktualisierung wird erlaubt; Spielcode/Browserzustand oder weiteres Kaufverhalten prüfen.');
+    else{
+      const gold=await probe('GOLD ALLEIN: –105','gold');
+      const item=await probe('STIEFEL ALLEIN: Bestand +1','item');
+      log('ERGEBNIS: kombiniert VERWEIGERT; Gold einzeln '+(gold?'OK':'VERWEIGERT')+'; Stiefel einzeln '+(item?'OK':'VERWEIGERT')+'.');
+    }
+  }catch(e){log('❗ ABGEBROCHEN: '+errText(e));}
+  const current=readBackup();if(current)log('❗ Eine Sicherung ist noch offen. Benutze „Sicherung wiederherstellen“.');else log('FERTIG: Keine offene Sicherung.');
+  controls(false);
+});
+$('copyBtn').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(lines.join('\n'));$('copyBtn').textContent='Kopiert';}catch{alert('Bitte das Protokoll markieren und kopieren.');}});
+if(readBackup()){$('state').textContent='⚠️ Ausstehende Sicherung erkannt. Bitte verbinden und über „Sicherung wiederherstellen“ prüfen, bevor erneut getestet wird.';$('recoverBtn').disabled=false;}
+</script>
+</body></html>
