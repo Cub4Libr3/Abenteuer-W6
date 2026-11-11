@@ -554,8 +554,14 @@ const accessories=[
 ];
 function accessoryBonus(h,key){
  const earInUse=new Set(Object.values(paperEarSlots(h)).filter(id=>id>=0));
- return accessories.reduce((sum,a,i)=>sum+(h.equippedAccessories?.[i]&&h.ownedAccessories?.[i]&&a[2]===key&&(!isEarAccessory(i)||earInUse.has(i))?a[3]:0),0);
-}
+  const ringNeck=paperAccessorySlots(h);
+  const ringInUse=new Set([ringNeck.left,ringNeck.right]);
+  return accessories.reduce((sum,a,i)=>{
+   const type=accessoryWearType(i);
+   const slotted=type==='ear'?earInUse.has(i):type==='ring'?ringInUse.has(i):type==='neck'?ringNeck.neck===i:true;
+   return sum+(h.equippedAccessories?.[i]&&h.ownedAccessories?.[i]&&a[2]===key&&slotted?a[3]:0);
+  },0);
+ }
 const mrFor=h=>(races[h.race]?.mr||0)+armorMr(h.ownedArmors?.[h.armorId]?h.armorId:-1)+accessoryBonus(h,'mr');
 const armorPrices=[18,22,30,35,55,75,130,145,190,240,380,400,690,700,1350];
 const potions=[
@@ -674,6 +680,7 @@ function newShopMarkup(i,h){
  return `<details class="store-fold"><summary>🧥 Kleidung – Kopfbedeckungen, Stiefel und Handschuhe</summary><p class="muted">Leichte Kleidung mit 0–1 Rüstungsschutz. Pro Kategorie kann ein Gegenstand angelegt werden.</p><div data-merchant-note="clothing"></div>${[['head','Kopfbedeckungen'],['boots','Stiefel'],['gloves','Handschuhe']].map(([slot,title])=>`<h4>${title}</h4><div class="alr-new-shop-grid">${itemRows('clothing',slot)}</div>`).join('')}</details><details class="store-fold"><summary>🛡️ Schildladen – 10 Schilde</summary><p class="muted">Schilde bringen 1–2 RS und dürfen ausschließlich zusammen mit einer angelegten Einhandwaffe getragen werden.</p><div data-merchant-note="shield"></div><div class="alr-new-shop-grid">${itemRows('shield')}</div></details>`;
 }
 function isEarAccessory(id){return /^(Ohrring|Piercing)\b/i.test(accessories[Number(id)]?.[0]||'');}
+function accessoryWearType(id){const name=accessories[Number(id)]?.[0]||'';return isEarAccessory(id)?'ear':/^Ring /i.test(name)?'ring':/^(Halskette|Talisman|Amulett)/i.test(name)?'neck':'other';}
 function accessoryPaperList(h,slot){return accessories.map((a,id)=>({id,name:a[0]})).filter(x=>h.ownedAccessories?.[x.id]&&(slot==='neck'?/^(Halskette|Talisman|Amulett)/i.test(x.name):slot==='ear'?isEarAccessory(x.id):/^Ring /i.test(x.name)));}
 // Values from old saves (equippedAccessories only) are shown and migrated when an ear slot changes.
 function paperEarSlots(h){
@@ -730,7 +737,7 @@ function paperdollMarkup(h,i){const editable=canManage(room?.heroes?.[i]),access
 }
 async function saveClothingEquip(i,slot,id){try{if(!['head','boots','gloves'].includes(slot))throw Error('Unbekannter Platz.');const h=normalized(room?.heroes?.[i]||{});if(!canManage(room?.heroes?.[i]))throw Error('Keine Berechtigung.');if(id!==-1&&(!Number.isInteger(id)||!clothing[id]||clothing[id].slot!==slot||!h.ownedClothing?.[id]||clothing[id].level>h.xpLevel))throw Error('Kleidung nicht vorhanden oder Stufe zu niedrig.');await set(ref(db,`rooms/${roomKey}/heroes/${i}/equippedClothing/${slot}`),id);}catch(e){alert('Kleidung anlegen: '+e.message);render();}}
 async function saveShieldEquip(i,id){try{const h=normalized(room?.heroes?.[i]||{});if(!canManage(room?.heroes?.[i]))throw Error('Keine Berechtigung.');if(id!==-1){if(!Number.isInteger(id)||!shields[id]||!h.ownedShields?.[id]||shields[id].level>h.xpLevel)throw Error('Schild nicht gekauft oder Stufe zu niedrig.');if(!weaponIsOneHanded(h.weaponId)||!h.ownedWeapons?.[h.weaponId])throw Error('Schild darf nur zusammen mit einer ausgerüsteten Einhandwaffe getragen werden.');}await set(ref(db,`rooms/${roomKey}/heroes/${i}/shieldId`),id);}catch(e){alert('Schild anlegen: '+e.message);render();}}
-async function savePaperAccessory(i,slot,id){try{const h=normalized(room?.heroes?.[i]||{});if(!canManage(room?.heroes?.[i]))throw Error('Keine Berechtigung.');if(!['left','right','neck'].includes(slot))throw Error('Unbekannter Schmuckplatz.');const options=accessoryPaperList(h,slot==='neck'?'neck':'ring');if(id!==-1&&(!options.some(x=>x.id===id)||!h.ownedAccessories?.[id]))throw Error('Schmuck nicht vorhanden.');const chosen=paperAccessorySlots(h),other=slot==='left'?'right':'left';if(id>=0&&slot!=='neck'&&chosen[other]===id)throw Error('Dieser Ring ist bereits an der anderen Hand angelegt.');const old=chosen[slot],changes={[`paperRings/${slot}`]:id};if(old>=0&&old!==id)changes[`equippedAccessories/${old}`]=null;if(id>=0)changes[`equippedAccessories/${id}`]=1;await update(ref(db,`rooms/${roomKey}/heroes/${i}`),changes);}catch(e){alert('Schmuck anlegen: '+e.message);render();}}
+async function savePaperAccessory(i,slot,id){try{const h=normalized(room?.heroes?.[i]||{});if(!canManage(room?.heroes?.[i]))throw Error('Keine Berechtigung.');if(!['left','right','neck'].includes(slot))throw Error('Unbekannter Schmuckplatz.');const options=accessoryPaperList(h,slot==='neck'?'neck':'ring');if(id!==-1&&(!options.some(x=>x.id===id)||!h.ownedAccessories?.[id]))throw Error('Schmuck nicht vorhanden.');const chosen=paperAccessorySlots(h),other=slot==='left'?'right':'left';if(id>=0&&slot!=='neck'&&chosen[other]===id)throw Error('Dieser Ring ist bereits an der anderen Hand angelegt.');const old=chosen[slot];if(id>=0&&old<0&&Object.values(h.equippedAccessories||{}).filter(Boolean).length>=10)throw Error('Maximal zehn Schmuckstücke gleichzeitig.');const changes={[`paperRings/${slot}`]:id};if(old>=0&&old!==id)changes[`equippedAccessories/${old}`]=null;if(id>=0)changes[`equippedAccessories/${id}`]=1;await update(ref(db,`rooms/${roomKey}/heroes/${i}`),changes);}catch(e){alert('Schmuck anlegen: '+e.message);render();}}
 async function saveEarAccessory(i,side,id){try{
  const raw=room?.heroes?.[i],h=normalized(raw||{});
  if(!canManage(raw))throw Error('Keine Berechtigung für diesen Charakter.');
@@ -1335,7 +1342,7 @@ function merchantAllowed(kind,i){
  if(raw&&!raw.creationComplete&&(host||raw.owner===uid))return true;
   const v=room?.merchantOpen;
   if(v==null)return true;
-  if(kind==='clothing'||kind==='shield')return typeof v[kind]==='boolean'?v[kind]:v.accessory===true; // existing room without new field
+  if(kind==='clothing'||kind==='shield')return typeof v[kind]==='boolean'?v[kind]:true; // Vor RC 10.8 angelegte Räume: neue Händler sind standardmäßig offen und unabhängig vom Schmuckhändler.
   return v[kind]===true;
 }
 async function setMerchant(kind,enabled){if(!host||!roomKey)return;const feedback=$('merchantFeedback');feedback.textContent='Händlerfreigabe wird gespeichert …';try{await set(ref(db,`rooms/${roomKey}/merchantOpen/${kind}`),!!enabled);const snap=await get(ref(db,`rooms/${roomKey}/merchantOpen/${kind}`));if(snap.val()!==!!enabled)throw Error('Gespeicherter Wert stimmt nicht mit der Auswahl überein.');feedback.textContent=({weapon:'Waffen',armor:'Rüstungen',potion:'Tränke',accessory:'Schmuck und Runen',clothing:'Kleidung',shield:'Schilde'})[kind]+(enabled?' freigegeben.':' geschlossen.');const chip=$('shopContent')?.querySelector(`[data-gm-shop-status="${kind}"]`);if(chip){chip.textContent=enabled?'● offen':'● gesperrt';chip.className=enabled?'success':'danger';}}catch(e){feedback.textContent='Fehler beim Speichern: '+(e.message||e);alert('Händlersteuerung fehlgeschlagen: '+(e.message||e));}finally{const ids={weapon:'allowWeapons',armor:'allowArmors',potion:'allowPotions',accessory:'allowAccessories',clothing:'allowClothing',shield:'allowShields'};try{const snap=await get(ref(db,`rooms/${roomKey}/merchantOpen/${kind}`));{const control=$(ids[kind]);if(control)control.checked=(typeof snap.val()==="boolean"?snap.val():merchantAllowed(kind));}}catch(e){console.warn('Shopfreigabe prüfen:',e);}}}
@@ -1796,7 +1803,13 @@ function shop108Rows(kind,i,h,readOnly){
   const equipped=!readOnly&&qty>0&&shop108Equipped(spec,h);
   const btn=(action,label,disabled=false,title='')=>`<button type="button" class="alr108-action ${action==='buy'?'primary':''}" data-shop108-action="${action}" data-kind="${kind}" data-id="${spec.id}" data-slot="${i}" ${disabled?'disabled':''} ${title?`title="${esc(title)}"`:''}>${label}</button>`;
   const canEquip=qty>0&&kind!=='potion';
-  const equipReason=readOnly?null:kind==='shield'&&!equipped&&(!weaponIsOneHanded(h.weaponId)||!h.ownedWeapons?.[h.weaponId])?'EHW anlegen':kind==='accessory'&&isEarAccessory(spec.id)&&!equipped&&Object.values(paperEarSlots(h)).filter(id=>id>=0).length>=2?'Beide Ohrschmuckplätze belegt – im Charakterbogen wechseln':null;
+  const wear=kind==='accessory'?accessoryWearType(spec.id):null;
+  const paper=kind==='accessory'&&!readOnly?paperAccessorySlots(h):null;
+  const equipReason=readOnly?null:
+   kind==='shield'&&!equipped&&(!weaponIsOneHanded(h.weaponId)||!h.ownedWeapons?.[h.weaponId])?'Zuerst Einhandwaffe anlegen':
+   kind==='accessory'&&!equipped&&wear==='ear'&&Object.values(paperEarSlots(h)).filter(id=>id>=0).length>=2?'Beide Ohrschmuckplätze belegt – im Charakterbogen wechseln':
+   kind==='accessory'&&!equipped&&wear==='ring'&&paper.left>=0&&paper.right>=0?'Beide Ringplätze belegt – im Charakterbogen wechseln':
+   kind==='accessory'&&!equipped&&wear==='neck'&&paper.neck>=0?'Ketten-/Amulettplatz belegt – im Charakterbogen wechseln':null;
   const buttons=readOnly?'<span class="muted">Meisterübersicht</span>':`<div class="alr108-actions">
    ${btn('buy','Kaufen',!!reason,reason)}
    ${canEquip?btn('equip',equipped?'Ablegen':'Anlegen',!!equipReason,equipReason||''):''}
@@ -2065,7 +2078,7 @@ async function buy(i,kind,id){try{
  if(kind==='weapon'&&isStaff(id)&&h.role!=='Magier')throw Error('Magierstäbe sind nur für Magier erhältlich.');
  if(kind!=='potion'&&kind!=='accessory'&&list[id][1]>(kind==='weapon'?allowedWeaponLevel(h):h.xpLevel))throw Error('Mindestlevel noch nicht erreicht.');
  if(kind==='accessory'&&h[field]?.[id])throw Error('Bereits gekauft.');
- if(kind==='potion'&&(Number(h.potions?.[id])||0)>=99)throw Error('Maximal 99 Tränke.');
+  if((Number(h[field]?.[id])||0)>= (kind==='accessory'?1:99))throw Error('Maximale Anzahl für diesen Gegenstand erreicht.');
  // Atomare Mehrpfad-Aktualisierung: Nur Gold und der gekaufte Artikel.
  // Anders als eine Transaktion auf dem ganzen Helden benötigt sie keine
  // Schreibberechtigung für XP, Identität oder andere Charakterfelder.
@@ -2112,10 +2125,21 @@ async function toggleAccessory(i,id){try{
    changes[`earSlots/${side==='left'?'right':'left'}`]=current[side==='left'?'right':'left'];
    changes[`equippedAccessories/${id}`]=1;
   }
-  await update(ref(db,`rooms/${roomKey}/heroes/${i}`),changes);
-  return;
- }
- if(!active&&Object.values(h.equippedAccessories||{}).filter(Boolean).length>=10)throw Error('Maximal zehn Ausrüstungsteile gleichzeitig.');
+   await update(ref(db,`rooms/${roomKey}/heroes/${i}`),changes);
+   return;
+  }
+  const wear=accessoryWearType(id);
+  if(wear==='ring'||wear==='neck'){
+   const selected=paperAccessorySlots(h);
+   const places=wear==='ring'?['left','right']:['neck'];
+   const place=active?places.find(s=>selected[s]===id):places.find(s=>selected[s]<0);
+   if(active&&place){await savePaperAccessory(i,place,-1);return;}
+   if(active){await set(ref(db,`rooms/${roomKey}/heroes/${i}/equippedAccessories/${id}`),null);return;} // Altspeicher ohne gültigen Platz bereinigen
+   if(!place)throw Error(wear==='ring'?'Beide Ringplätze sind belegt. Bitte im Charakterbogen zuerst einen Ring ablegen.':'Ketten-/Amulettplatz ist belegt. Bitte im Charakterbogen zuerst den bisherigen Gegenstand ablegen.');
+   await savePaperAccessory(i,place,id);
+   return;
+  }
+  if(!active&&Object.values(h.equippedAccessories||{}).filter(Boolean).length>=10)throw Error('Maximal zehn Ausrüstungsteile gleichzeitig.');
  await set(ref(db,`rooms/${roomKey}/heroes/${i}/equippedAccessories/${id}`),active?null:1);
  }catch(e){alert('Ausrüstung: '+firebaseWriteHelp(e,i));}}
 async function drink(i,id){try{
