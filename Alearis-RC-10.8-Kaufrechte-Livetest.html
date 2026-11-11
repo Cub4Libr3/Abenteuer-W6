@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alearis RC 10.8 – Firebase-Kaufrechte live prüfen</title>
+<style>
+:root{color-scheme:dark}body{font:16px/1.55 system-ui,sans-serif;background:#101a23;color:#e4ecf4;max-width:880px;margin:0 auto;padding:22px 15px}h1{font-size:1.65rem;color:#f4cd87;margin-bottom:.15em}p{margin:.65em 0}small{color:#bac9d8}section{background:#182633;border:1px solid #435365;padding:16px;border-radius:12px;margin:16px 0}button,select,input{font:inherit;padding:9px 12px;border-radius:7px;border:1px solid #7c8da2;background:#e8edf3;color:#182b3a;max-width:100%}button{cursor:pointer;background:#eed39b;border-color:#ad8a52;font-weight:650}button:disabled{opacity:.5;cursor:wait}label{display:block;margin:.6em 0 .35em}input{width:min(100%,440px);box-sizing:border-box}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#0a131d;border:1px solid #34516a;padding:15px;border-radius:9px;min-height:7em;font-size:.87rem}.good{color:#79db9b}.bad{color:#ff9f9f}.muted{color:#c0c9d1}.tag{font-weight:700;color:#f4cd87}.actions{display:flex;gap:8px;flex-wrap:wrap}a{color:#8bc9ff}</style>
+</head><body>
+<h1>Alearis RC 10.8 · Kaufrechte-Livetest</h1>
+<p>Dieser Test ermittelt, <strong>ob Firebase Schreibzugriffe tatsächlich zulässt</strong>. Er benutzt deine bestehende Anmeldung der GitHub-Pages-Website. Er erzeugt <strong>keinen Kauf</strong> und verändert weder Gold noch Gegenstandsmengen: Zum Test schreibt er ausschließlich bereits vorhandene Werte unverändert zurück oder entfernt einen nicht vorhandenen Wert.</p>
+<section><b>Standortkontrolle</b><p id="origin"></p><p class="muted">Wichtig: Diese Seite muss auf <code>cub4libr3.github.io</code> veröffentlicht und dort geöffnet werden – nicht als Datei, Vorschau oder auf chatgpt.com.</p></section>
+<section><b>1 · Anmelden und Spielraum ermitteln</b><p id="connection">Noch nicht geprüft.</p><label for="roomKey">Spielraumschlüssel (36 Zeichen, aus der Spiel-URL)</label><input id="roomKey" placeholder="Wird nach Möglichkeit automatisch erkannt" autocomplete="off" maxlength="36"><div class="actions" style="margin-top:12px"><button id="connect">Firebase-Verbindung prüfen</button></div><label for="character">Charakter</label><select id="character" disabled><option>Erst verbinden</option></select><p id="context"></p></section>
+<section><b>2 · Schreibrechte ohne Buchung prüfen</b><p class="muted">Nur bei deinem eigenen Charakter oder als Spielmeister ausführen. Getestet werden Gold und die sechs Besitzpfade der Shops. Der Test erfasst die genaue Firebase-Fehlermeldung.</p><div class="actions"><button id="test" disabled>Schreibrechte jetzt testen</button><button id="copy" disabled>Ergebnis kopieren</button></div><pre id="output">Noch kein Test.</pre></section>
+<p><small>Das Protokoll zeigt keine vollständigen Benutzerkennungen, Raumkennungen, API-Schlüssel oder Charakterdaten. Es wird nirgendwohin versendet – nur in deinem Browser angezeigt.</small></p>
+<script type="module">
+const $=id=>document.getElementById(id), lines=[];
+let fb,db,auth,user,room,roomKey,heroes={};
+const log=(s)=>{lines.push(s);$('output').textContent=lines.join('\n');};
+const code=e=>String(e?.code||e?.name||'unknown');
+const msg=e=>String(e?.message||e||'Fehler').replace(/https?:\/\/\S+/g,'[URL]');
+const status=(ok)=>ok?'OK':'VERWEIGERT';
+const mask=x=>x?String(x).slice(0,6)+'…':'—';
+$('origin').textContent=location.origin+' · '+(location.hostname.toLowerCase()==='cub4libr3.github.io'?'geeignete Domain':'ACHTUNG: andere Domain');
+$('roomKey').value=new URLSearchParams(location.search).get('room')||'';
+function busy(b){$('connect').disabled=b;$('test').disabled=b||!room;$('copy').disabled=!lines.length;}
+async function loadModules(){
+  if(fb)return fb;
+  try{const b='https://www.gstatic.com/firebasejs/10.14.1/'; const [a,u,d]=await Promise.all([import(b+'firebase-app.js'),import(b+'firebase-auth.js'),import(b+'firebase-database.js')]);fb={a,u,d};return fb;}
+  catch(e){const b='https://esm.sh/firebase@10.14.1/'; const [a,u,d]=await Promise.all([import(b+'app'),import(b+'auth'),import(b+'database')]);fb={a,u,d};return fb;}
+}
+async function connect(){
+ busy(true);room=null;roomKey='';$('test').disabled=true;$('context').textContent='';$('character').disabled=true;
+ try{
+  if(location.hostname.toLowerCase()!=='cub4libr3.github.io')throw Error('Diese Seite läuft nicht auf der GitHub-Pages-Domain des Spiels.');
+  const json=localStorage.getItem('w6-firebase-config');if(!json)throw Error('Keine Firebase-Konfiguration auf dieser Domain. Öffne erst das Spiel auf dieser Domain und trete deiner Runde bei.');
+  const cfg=JSON.parse(json);if(!cfg.apiKey||!cfg.databaseURL||!cfg.projectId||!cfg.appId)throw Error('Die gespeicherte Firebase-Konfiguration ist unvollständig.');
+  await loadModules();
+  const app=fb.a.initializeApp(cfg);auth=fb.u.getAuth(app);db=fb.d.getDatabase(app);
+  await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Anmeldeprüfung dauert zu lange')),15000);const unsub=fb.u.onAuthStateChanged(auth,()=>{clearTimeout(timer);unsub();resolve();},e=>{clearTimeout(timer);reject(e);});});
+  user=auth.currentUser;
+  if(!user)throw Error('Keine aktive Firebase-Anmeldung. Bitte erst das Spiel auf dieser Domain öffnen und als Charakter verbinden; dann hier neu prüfen.');
+  $('connection').textContent='Firebase angemeldet · Kennung '+mask(user.uid)+' (anonym: '+(user.isAnonymous?'ja':'nein')+')';
+  const entered=$('roomKey').value.trim();
+  if(entered)roomKey=entered;
+  else{const active=await fb.d.get(fb.d.ref(db,'activeSession'));roomKey=active.val()?.roomKey||'';}
+  if(!/^[a-f0-9]{36}$/.test(roomKey))throw Error('Spielraum nicht ermittelbar. Trage den 36-stelligen Schlüssel aus der Spiel-URL ein (?room=...).');
+  $('roomKey').value=roomKey;
+  const snapshot=await fb.d.get(fb.d.ref(db,'rooms/'+roomKey));if(!snapshot.exists())throw Error('Der Spielraum wurde nicht gefunden oder ist für diese Anmeldung nicht lesbar.');
+  room=snapshot.val();heroes=room.heroes||{};
+  const select=$('character'); select.replaceChildren();
+  Object.entries(heroes).forEach(([slot,h])=>{if(!h)return;const o=document.createElement('option');o.value=slot;o.textContent='Platz '+slot+' · '+(h.owner===user.uid?'eigener Charakter':room.hostUid===user.uid?'Spielmeister-Zugriff':'anderer Besitzer');select.append(o);});
+  const owned=Object.entries(heroes).find(([i,h])=>h?.owner===user.uid);
+  if(owned)select.value=owned[0];select.disabled=false;
+  $('test').disabled=false;
+  showContext();
+ }catch(e){$('connection').textContent='Fehler: '+code(e)+' · '+msg(e);$('context').textContent='Verbindung nicht bereit.';}
+ finally{busy(false);$('test').disabled=!room;}
+}
+function showContext(){
+ const s=$('character').value,h=heroes[s]; if(!h||!room||!user)return;
+ const host=room.hostUid===user.uid, owner=h.owner===user.uid;
+ const open=room.merchantOpen||{};
+ const merchant=['weapon','armor','clothing','shield','accessory','potion'].map(k=>k+': '+(typeof open[k]==='boolean'?(open[k]?'offen':'GESCHLOSSEN'):(k==='clothing'||k==='shield'?'ohne Freigabewert (im neuen Shop offen)':'Freigabewert fehlt'))).join(' · ');
+ $('context').textContent='Berechtigung laut Daten: '+(host?'Spielmeister':owner?'Charakterbesitzer':'FREMDER CHARAKTER')+' · Gold: '+(typeof h.gold==='number'?h.gold:'kein gültiger Zahlenwert')+' · Charakter fertiggestellt: '+(h.creationComplete===true?'ja':'nein')+' · Händlersperren: '+merchant;
+}
+$('character').addEventListener('change',showContext);
+$('connect').addEventListener('click',connect);
+async function probe(label,payload){
+ const s=$('character').value;
+ try{
+  await fb.d.update(fb.d.ref(db,'rooms/'+roomKey+'/heroes/'+s),payload);
+  log('✅ '+label+': OK (unveränderte Werte zurückgeschrieben)');return true;
+ }catch(e){log('❌ '+label+': '+code(e)+' · '+msg(e));return false;}
+}
+$('test').addEventListener('click',async()=>{
+ if(!room)return;
+ const s=$('character').value,h=heroes[s];if(!h)return;
+ const host=room.hostUid===user.uid,owner=h.owner===user.uid;
+ if(!host&&!owner){alert('Dieser Charakter gehört der aktuellen Firebase-Anmeldung nicht. Bitte eigenen Charakter auswählen oder als Spielmeister anmelden.');return;}
+ if(!confirm('Schreibrechte ohne Kauf prüfen? Es werden ausschließlich vorhandene Werte unverändert zurückgeschrieben.'))return;
+ $('test').disabled=true;lines.length=0;log('ALEARIS RC 10.8 · KAUFRECHTE-LIVETEST');log('Domain: '+location.hostname);log('Firebase: '+(user.isAnonymous?'anonym':'angemeldet')+', UID '+mask(user.uid));log('Rolle: '+(host?'Spielmeister':owner?'Charakterbesitzer':'unberechtigt'));log('Raum: '+mask(roomKey));
+ const originalGold=h.gold;
+ if(typeof originalGold!=='number'||!Number.isFinite(originalGold)){log('❌ Gold hat keinen gültigen Zahlenwert – kein sicherer Schreibtest möglich.');$('copy').disabled=false;$('test').disabled=false;return;}
+ let okCount=0, failCount=0;
+ const run=async(n,p)=>{const ok=await probe(n,p);if(ok)okCount++;else failCount++;return ok;};
+ const gold=await run('Gold allein',{gold:originalGold});
+ const tests=[['Waffen','ownedWeapons','0'],['Rüstungen','ownedArmors','0'],['Schilde','ownedShields','0'],['Kleidung / Stiefel','ownedClothing','6'],['Schmuck / Ohrringe','ownedAccessories','5'],['Tränke','potions','0']];
+ for(const [title,field,id] of tests){
+  const current=h[field]?.[id]??null;
+  // Existierende Werte bleiben identisch. Nicht vorhandene Pfade bleiben durch null unverändert.
+  const changes={gold:originalGold,[field+'/'+id]:current};
+  await run('Kombinierter Kaufpfad '+title,changes);
+ }
+ log('ERGEBNIS: '+okCount+' Prüfungen OK, '+failCount+' verweigert.');
+ log(!gold?'Hinweis: Schon Gold wird verweigert → zuerst Besitzer-UID und LIVE veröffentlichte Firebase-Regeln prüfen.':'Hinweis: Gold funktioniert. Wenn Artikelpfade verweigert werden, fehlen wahrscheinlich entsprechende Besitzrechte oder eine Validierung schlägt fehl.');
+ log('Hinweis: Ein erfolgreicher No-op-Test beweist noch nicht die Kauf-Validierung für neue Werte; er prüft aber reale Schreibberechtigungen und den kombinierten Pfad.');
+ $('copy').disabled=false;$('test').disabled=false;
+ });
+$('copy').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(lines.join('\n'));$('copy').textContent='Kopiert';}catch(e){alert('Bitte das Textprotokoll markieren und kopieren.');}});
+</script>
+</body></html>
